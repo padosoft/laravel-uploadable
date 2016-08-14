@@ -211,6 +211,9 @@ trait Uploadable
      */
     public function generateNewUploadFileName(UploadedFile $uploadedFile, string $uploadField)
     {
+        if (!$uploadField) {
+            return '';
+        }
         if (!$uploadedFile) {
             return '';
         }

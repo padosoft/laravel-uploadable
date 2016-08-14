@@ -5,7 +5,7 @@
 [![Build Status](https://img.shields.io/travis/padosoft/laravel-uploadable/master.svg?style=flat-square)](https://travis-ci.org/padosoft/laravel-uploadable)
 [![Quality Score](https://img.shields.io/scrutinizer/g/padosoft/laravel-uploadable.svg?style=flat-square)](https://scrutinizer-ci.com/g/padosoft/laravel-uploadable)
 [![Total Downloads](https://img.shields.io/packagist/dt/padosoft/laravel-uploadable.svg?style=flat-square)](https://packagist.org/packages/padosoft/laravel-uploadable)
-[![SensioLabsInsight](https://img.shields.io/sensiolabs/i/236930cb-61cc-433f-b864-e5660f4533e6.svg?style=flat-square)](https://insight.sensiolabs.com/projects/a56f8c11-331f-4d3c-8724-77f55969f2f7)
+[![SensioLabsInsight](https://img.shields.io/sensiolabs/i/4570b2c7-71c6-4b11-9214-da078fb51a98.svg?style=flat-square)](https://insight.sensiolabs.com/projects/4570b2c7-71c6-4b11-9214-da078fb51a98)
 
 This package provides a trait that will automatic handlind upload when saving/updating/deleting any Eloquent model with upload form request.
 
