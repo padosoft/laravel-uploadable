@@ -1,0 +1,42 @@
+{
+    "name": "padosoft/laravel-uploadable",
+    "description": "Laravel package for automatic upload handling with trait",
+    "keywords": [
+        "padosoft",
+        "laravel-uploadable"
+    ],
+    "homepage": "https://github.com/padosoft/laravel-uploadable",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Lorenzo Padovani",
+            "email": "helpdesk@padosoft.com",
+            "homepage": "https://www.padosoft.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php" : ">=7.0.0",
+        "illuminate/http": "^5.0",
+        "illuminate/database": "^5.0",
+        "illuminate/support": "^5.0"
+
+    },
+    "require-dev": {
+        "orchestra/testbench": "^3.2",
+        "phpunit/phpunit": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Padosoft\\Uploadable\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Padosoft\\Uploadable\\Test\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}
