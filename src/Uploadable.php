@@ -3,8 +3,9 @@
 namespace Padosoft\Uploadable;
 
 use DB;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Padosoft\Uploadable\Helpers\FileHelper;
 use Padosoft\Uploadable\Helpers\RequestHelper;
 use Padosoft\Uploadable\Helpers\UploadedFileHelper;
@@ -387,7 +388,7 @@ trait Uploadable
         }
 
         //generate new file name
-        $uploadedFile = $this->getCurrentRequestFileSafe($uploadField);
+        $uploadedFile = RequestHelper::getCurrentRequestFileSafe($uploadField);
         $newName = $this->generateNewUploadFileName($uploadedFile, $uploadField);
         if($newName==''){
             return;

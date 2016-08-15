@@ -31,7 +31,7 @@ class FileHelper
      * @param string $filePath
      * @return string
      */
-    public function getFilenameWithoutExtension(string $filePath) : string
+    public static function getFilenameWithoutExtension(string $filePath) : string
     {
         if(!$filePath){
             return '';
@@ -48,7 +48,7 @@ class FileHelper
      * @param string $filePath
      * @return bool
      */
-    public function unlinkSafe(string $filePath) : bool
+    public static function unlinkSafe(string $filePath) : bool
     {
         if (!file_exists($filePath)) {
             return false;

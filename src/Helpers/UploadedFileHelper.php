@@ -25,7 +25,7 @@ class UploadedFileHelper
         }
 
         // Check if uploaded File has a correct MimeType if specified.
-        return UplodedFileHelper::hasValidMimeType($arrMimeType, $uploadedFile);
+        return self::hasValidMimeType($arrMimeType, $uploadedFile);
     }
 
     /**
@@ -37,7 +37,7 @@ class UploadedFileHelper
      */
     public static function hasValidMimeType(array $arrMimeType, UploadedFile $uploadedFile) : bool
     {
-        return !($arrMimeType && count($arrMimeType) > 0 && !in_array($uploadedFile->getMimeType(), $arrMimeType));
+        return !(!empty($arrMimeType) && count($arrMimeType) > 0 && !in_array($uploadedFile->getMimeType(), $arrMimeType));
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace Padosoft\Uploadable\Helpers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 
 /**
  * Illuminate\Http\Request helper
@@ -16,7 +17,7 @@ class RequestHelper
      */
     public static function currentRequestHasFiles() : bool
     {
-        return RequestHelper::requestHasFiles(request());
+        return self::requestHasFiles(request());
     }
 
     /**
@@ -38,7 +39,7 @@ class RequestHelper
      */
     public static function isValidCurrentRequestUploadFile(string $uploadField, array $arrMimeType = array()) : bool
     {
-        return RequestHelper::isValidUploadFile($uploadField, $arrMimeType, request());
+        return self::isValidUploadFile($uploadField, $arrMimeType, request());
     }
 
     /**
@@ -55,7 +56,7 @@ class RequestHelper
             return false;
         }
 
-        $uploadedFile = $request->file($uploadField);
+        $uploadedFile = self::getFileSafe($uploadField, [], $request);
 
         return UploadedFileHelper::isValidUploadFile($arrMimeType, $uploadedFile);
     }
@@ -68,7 +69,7 @@ class RequestHelper
      */
     public static function getCurrentRequestFileSafe(string $uploadField, array $arrMimeType = array()) : UploadedFile
     {
-        return RequestHelper::getFileSafe($uploadField, $arrMimeType, request());
+        return self::getFileSafe($uploadField, $arrMimeType, request());
     }
 
     /**
@@ -81,10 +82,16 @@ class RequestHelper
     public static function getFileSafe(string $uploadField, array $arrMimeType = array(), Request $request) : UploadedFile
     {
         // Check if uploaded File is valid
-        if (!RequestHelper::isValidUploadFile($uploadField, $arrMimeType, $request)) {
+        if (!self::isValidUploadFile($uploadField, $arrMimeType, $request)) {
             return null;
         }
 
-        return $request->file($uploadField);
+        $uploadedFile = $request->file($uploadField);
+        //check type because $request->file() return UploadedFile|array|null
+        if(!is_a($uploadedFile, UploadedFile::class)){
+            return null;
+        }
+
+        return $uploadedFile;
     }
 }
