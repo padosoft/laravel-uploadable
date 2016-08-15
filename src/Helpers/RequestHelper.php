@@ -56,6 +56,10 @@ class RequestHelper
             return false;
         }
 
+        if ($uploadField===null) {
+            return false;
+        }
+
         $uploadedFile = self::getFileSafe($uploadField, [], $request);
 
         return UploadedFileHelper::isValidUploadFile($arrMimeType, $uploadedFile);
@@ -87,7 +91,7 @@ class RequestHelper
         }
 
         $uploadedFile = $request->file($uploadField);
-        //check type because $request->file() return UploadedFile|array|null
+        //check type because request file method, may returns UploadedFile, array or null
         if(!is_a($uploadedFile, UploadedFile::class)){
             return null;
         }

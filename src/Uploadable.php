@@ -98,13 +98,8 @@ trait Uploadable
             return;
         }
 
-        //current request has not uploaded files
-        if (!RequestHelper::currentRequestHasFiles()) {
-            return;
-        }
-
-        //ensure that all upload path are ok or create it.
-        if (!$this->checkOrCreateAllUploadBasePaths()) {
+        //check request for valid files and server for correct paths defined in model
+        if(!$this->requestHasValidFilesAndCorrectPaths()){
             return;
         }
 
@@ -139,11 +134,7 @@ trait Uploadable
      */
     public function doUpload(UploadedFile $uploadedFile, $uploadAttribute) : string
     {
-        if ($this->id < 1) {
-            return '';
-        }
-
-        if (!$uploadedFile || !$uploadAttribute) {
+        if (($this->id < 1) || !$uploadedFile || !$uploadAttribute) {
             return '';
         }
 
@@ -165,6 +156,25 @@ trait Uploadable
         }
 
         return $targetFile ? $newName : '';
+    }
+
+    /**
+     * Check request for valid files and server for correct paths defined in model
+     * @return bool
+     */
+    protected function requestHasValidFilesAndCorrectPaths() : bool
+    {
+        //current request has not uploaded files
+        if (!RequestHelper::currentRequestHasFiles()) {
+            return false;
+        }
+
+        //ensure that all upload path are ok or create it.
+        if (!$this->checkOrCreateAllUploadBasePaths()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -383,7 +393,7 @@ trait Uploadable
      */
     public function generateNewUploadFileNameAndSetAttribute(string $uploadField)
     {
-        if($uploadField==''){
+        if($uploadField===null || trim($uploadField)==''){
             return;
         }
 
