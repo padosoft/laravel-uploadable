@@ -61,6 +61,9 @@ class RequestHelper
         }
 
         $uploadedFile = self::getFileSafe($uploadField, [], $request);
+        if($uploadedFile===null){
+            return;
+        }
 
         return UploadedFileHelper::isValidUploadFile($arrMimeType, $uploadedFile);
     }

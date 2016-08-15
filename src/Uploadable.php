@@ -121,7 +121,6 @@ trait Uploadable
             return;
         }
 
-        //all ok => do upload
         $this->doUpload($uploadedFile, $uploadField);
     }
 
@@ -147,7 +146,7 @@ trait Uploadable
         //delete if file already exists
         FileHelper::unlinkSafe($pathToStore . '/' . $newName);
 
-        //move uploaded file to destination folder
+        //move file to destination folder
         try {
             $targetFile = $uploadedFile->move($pathToStore, $newName);
         } catch (\Symfony\Component\HttpFoundation\File\Exception\FileException $e) {
@@ -239,12 +238,10 @@ trait Uploadable
      */
     public function deleteUploadedFile(string $uploadField)
     {
-        //if empty prop exit
         if (!$uploadField) {
             return;
         }
 
-        //if a blank attribute value skip it
         if (!$this->{$uploadField}) {
             return;
         }
@@ -368,7 +365,7 @@ trait Uploadable
     public function getUploadFilePathSpecific(string $uploadField) : string
     {
         //check if there is a specified upload path
-        if ($this->getUploadOptionsOrDefault()->uploadPaths && count($this->getUploadOptionsOrDefault()->uploadPaths) > 0 && array_key_exists($uploadField,
+        if (!empty($this->getUploadOptionsOrDefault()->uploadPaths) && count($this->getUploadOptionsOrDefault()->uploadPaths) > 0 && array_key_exists($uploadField,
         $this->getUploadOptionsOrDefault()->uploadPaths)
         ) {
             return public_path($this->getUploadOptionsOrDefault()->uploadPaths[$uploadField]);
@@ -399,6 +396,9 @@ trait Uploadable
 
         //generate new file name
         $uploadedFile = RequestHelper::getCurrentRequestFileSafe($uploadField);
+        if($uploadedFile===null){
+            return;
+        }
         $newName = $this->generateNewUploadFileName($uploadedFile, $uploadField);
         if($newName==''){
             return;
