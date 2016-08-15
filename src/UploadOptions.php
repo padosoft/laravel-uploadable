@@ -15,7 +15,7 @@ class UploadOptions
      * Ex.:
      * original uploaded file name: pippo.jpg
      * final name: 'pippo'.$model->uploadFileNameSuffixSeparator.$model->id.'jpg'
-     * @var string
+     * @var bool
      */
     public $appendModelIdSuffixInUploadedFileName = true;
 
