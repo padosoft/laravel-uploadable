@@ -6,9 +6,10 @@ use DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
-use Padosoft\Uploadable\Helpers\FileHelper;
-use Padosoft\Uploadable\Helpers\RequestHelper;
-use Padosoft\Uploadable\Helpers\UploadedFileHelper;
+use Padosoft\Io\DirHelper;
+use Padosoft\Io\FileHelper;
+use Padosoft\Laravel\Request\RequestHelper;
+use Padosoft\Laravel\Request\UploadedFileHelper;
 
 /**
  * Class Uploadable
@@ -65,13 +66,19 @@ trait Uploadable
      */
     public function getUploadOptionsOrDefault() : UploadOptions
     {
+        if ($this->uploadOptions) {
+            return $this->uploadOptions;
+        }
+
         if (method_exists($this, 'getUploadOptions')) {
             $method = 'getUploadOptions';
-            return $this->{$method}();
+            $this->uploadOptions = $this->{$method}();
         } else {
-            return UploadOptions::create()->getUploadOptionsDefault()
+            $this->uploadOptions = UploadOptions::create()->getUploadOptionsDefault()
                 ->setUploadBasePath(public_path('upload/' . $this->getTable()));
         }
+
+        return $this->uploadOptions;
     }
 
     /**
@@ -83,7 +90,7 @@ trait Uploadable
         if (!count($this->uploadOptions->uploads)) {
             throw InvalidOption::missingUploadFields();
         }
-        if (!strlen($this->uploadOptions->uploadBasePath)) {
+        if ($this->uploadOptions->uploadBasePath===null || $this->uploadOptions->uploadBasePath=='') {
             throw InvalidOption::missingUploadBasePath();
         }
     }
@@ -99,7 +106,7 @@ trait Uploadable
         }
 
         //check request for valid files and server for correct paths defined in model
-        if(!$this->requestHasValidFilesAndCorrectPaths()){
+        if (!$this->requestHasValidFilesAndCorrectPaths()) {
             return;
         }
 
@@ -115,12 +122,18 @@ trait Uploadable
      */
     public function uploadFile(string $uploadField)
     {
-        //check if there is a file in request for current attribute
-        $uploadedFile = RequestHelper::getCurrentRequestFileSafe($uploadField, $this->getUploadOptionsOrDefault()->uploadsMimeType);
-        if (!$uploadedFile) {
+        //check if there is a valid file in request for current attribute
+        if(!RequestHelper::isValidCurrentRequestUploadFile($uploadField,$this->getUploadOptionsOrDefault()->uploadsMimeType)){
             return;
         }
 
+        //retrive the uploaded file
+        $uploadedFile = RequestHelper::getCurrentRequestFileSafe($uploadField);
+        if ($uploadedFile===null) {
+            return;
+        }
+
+        //do the work
         $this->doUpload($uploadedFile, $uploadField);
     }
 
@@ -141,7 +154,7 @@ trait Uploadable
         $newName = $this->{$uploadAttribute};
 
         //get upload path to store
-        $pathToStore = $this->getUploadFilePath($uploadAttribute);
+        $pathToStore = $this->getUploadFileBasePath($uploadAttribute);
 
         //delete if file already exists
         FileHelper::unlinkSafe($pathToStore . '/' . $newName);
@@ -150,7 +163,7 @@ trait Uploadable
         try {
             $targetFile = $uploadedFile->move($pathToStore, $newName);
         } catch (\Symfony\Component\HttpFoundation\File\Exception\FileException $e) {
-            Log::warning('Error in doUpload() when try to move '.$newName.' to folder: '.$pathToStore.PHP_EOL.$e->getMessage().PHP_EOL.$e->getTraceAsString());
+            Log::warning('Error in doUpload() when try to move ' . $newName . ' to folder: ' . $pathToStore . PHP_EOL . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
             return '';
         }
 
@@ -194,7 +207,7 @@ trait Uploadable
 
         //check if file need a new name
         $newName = $this->calcolateNewUploadFileName($uploadedFile);
-        if($newName!=''){
+        if ($newName != '') {
             return $newName;
         }
 
@@ -247,7 +260,7 @@ trait Uploadable
         }
 
         //retrive correct upload storage path for current attribute
-        $uploadFieldPath = $this->getUploadFilePath($uploadField);
+        $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
 
         //unlink file
         $path = sprintf("%s/%s", $uploadFieldPath, $this->{$uploadField});
@@ -281,7 +294,7 @@ trait Uploadable
     {
         foreach ($this->getUploadsAttributesSafe() as $uploadField) {
             //for performance if one attribute has value exit false
-            if ($this-> {$uploadField}) {
+            if ($this->{$uploadField}) {
                 return false;
             }
         }
@@ -327,9 +340,10 @@ trait Uploadable
      */
     public function checkOrCreateUploadBasePath(string $uploadField) : bool
     {
-        $uploadFieldPath = $this->getUploadFilePath($uploadField);
+        $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
 
-        return FileHelper::checkDirExistOrCreate($uploadFieldPath, $this->getUploadOptionsOrDefault()->uploadCreateDirModeMask);
+        return FileHelper::checkDirExistOrCreate($uploadFieldPath,
+            $this->getUploadOptionsOrDefault()->uploadCreateDirModeMask);
     }
 
     /**
@@ -338,19 +352,21 @@ trait Uploadable
      * @param string $uploadField
      * @return string
      */
-    public function getUploadFilePath(string $uploadField) : string
+    public function getUploadFileBasePath(string $uploadField) : string
     {
         //default model upload path
         $uploadFieldPath = $this->getUploadOptionsOrDefault()->uploadBasePath;
 
         //overwrite if there is specific path for the field
-        $specificPath = $this->getUploadFilePathSpecific($uploadField);
-        if($specificPath!=''){
+        $specificPath = $this->getUploadFileBasePathSpecific($uploadField);
+        if ($specificPath != '') {
             $uploadFieldPath = $specificPath;
         }
 
         //check if exists or try to create dir
-        if(!FileHelper::checkDirExistOrCreate($uploadFieldPath,$this->getUploadOptionsOrDefault()->uploadCreateDirModeMask)){
+        if (!FileHelper::checkDirExistOrCreate($uploadFieldPath,
+            $this->getUploadOptionsOrDefault()->uploadCreateDirModeMask)
+        ) {
             return '';
         }
 
@@ -358,20 +374,89 @@ trait Uploadable
     }
 
     /**
-     * Return the specific upload path (by uploadPaths prop) for the passed attribute if exists.
+     * Return the specific upload path (by uploadPaths prop) for the passed attribute if exists, otherwise return empty string.
      * @param string $uploadField
      * @return string
      */
-    public function getUploadFilePathSpecific(string $uploadField) : string
+    public function getUploadFileBasePathSpecific(string $uploadField) : string
     {
         //check if there is a specified upload path
         if (!empty($this->getUploadOptionsOrDefault()->uploadPaths) && count($this->getUploadOptionsOrDefault()->uploadPaths) > 0 && array_key_exists($uploadField,
-        $this->getUploadOptionsOrDefault()->uploadPaths)
+                $this->getUploadOptionsOrDefault()->uploadPaths)
         ) {
             return public_path($this->getUploadOptionsOrDefault()->uploadPaths[$uploadField]);
         }
 
         return '';
+    }
+
+    /**
+     * Return the full (path+filename) upload abs path for the passed attribute.
+     * Returns empty string if dir if not exists.
+     * @param string $uploadField
+     * @return string
+     */
+    public function getUploadFileFullPath(string $uploadField) : string
+    {
+        $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
+        $uploadFieldPath = DirHelper::addFinalSlash($uploadFieldPath) . $this->{$uploadField};
+
+        if ($uploadFieldPath === null || $uploadFieldPath == '' || $uploadFieldPath == '/') {
+            return '';
+        }
+
+        return $uploadFieldPath;
+    }
+
+    /**
+     * Return the full url (base url + filename) for the passed attribute.
+     * Returns empty string if dir if not exists.
+     * Ex.:  http://localhost/laravel/public/upload/news/pippo.jpg
+     * @param string $uploadField
+     * @return string
+     */
+    public function getUploadFileUrl(string $uploadField) : string
+    {
+        $fallBack = '';
+
+        $Url = $this->getUploadFileFullPath($uploadField);
+        if($Url===null || $Url=='')
+        {
+            return $fallBack;
+        }
+
+        $uploadFieldPath = str_replace(public_path(), '', $Url);
+
+        if ($uploadFieldPath === null || $uploadFieldPath == '' || $uploadFieldPath == '/') {
+            return $fallBack;
+        }
+
+        return URL::to($uploadFieldPath);
+    }
+    /**
+     * Return the base url (without filename) for the passed attribute.
+     * Returns empty string if dir if not exists.
+     * Ex.:  http://localhost/laravel/public/upload/
+     * @param string $uploadField
+     * @return string
+     */
+    public function getUploadFileBaseUrl(string $uploadField) : string
+    {
+        $fallBack = '';
+
+        $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
+        if($uploadFieldPath===null || $uploadFieldPath=='')
+        {
+            return $fallBack;
+        }
+
+        $uploadFieldPath = DirHelper::addFinalSlash(str_replace(public_path(), '', $uploadFieldPath));
+
+        if ($uploadFieldPath === null || $uploadFieldPath == '' || $uploadFieldPath == '/') {
+            return $fallBack;
+        }
+
+        return URL::to($uploadFieldPath);
     }
 
     /**
@@ -390,17 +475,17 @@ trait Uploadable
      */
     public function generateNewUploadFileNameAndSetAttribute(string $uploadField)
     {
-        if($uploadField===null || trim($uploadField)==''){
+        if ($uploadField === null || trim($uploadField) == '') {
             return;
         }
 
         //generate new file name
         $uploadedFile = RequestHelper::getCurrentRequestFileSafe($uploadField);
-        if($uploadedFile===null){
+        if ($uploadedFile === null) {
             return;
         }
         $newName = $this->generateNewUploadFileName($uploadedFile, $uploadField);
-        if($newName==''){
+        if ($newName == '') {
             return;
         }
 
