@@ -3,9 +3,10 @@
 namespace Padosoft\Uploadable;
 
 use DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 use Padosoft\Io\DirHelper;
 use Padosoft\Io\FileHelper;
 use Padosoft\Laravel\Request\RequestHelper;
@@ -90,7 +91,7 @@ trait Uploadable
         if (!count($this->uploadOptions->uploads)) {
             throw InvalidOption::missingUploadFields();
         }
-        if ($this->uploadOptions->uploadBasePath===null || $this->uploadOptions->uploadBasePath=='') {
+        if ($this->uploadOptions->uploadBasePath === null || $this->uploadOptions->uploadBasePath == '') {
             throw InvalidOption::missingUploadBasePath();
         }
     }
@@ -123,13 +124,15 @@ trait Uploadable
     public function uploadFile(string $uploadField)
     {
         //check if there is a valid file in request for current attribute
-        if(!RequestHelper::isValidCurrentRequestUploadFile($uploadField,$this->getUploadOptionsOrDefault()->uploadsMimeType)){
+        if (!RequestHelper::isValidCurrentRequestUploadFile($uploadField,
+            $this->getUploadOptionsOrDefault()->uploadsMimeType)
+        ) {
             return;
         }
 
         //retrive the uploaded file
         $uploadedFile = RequestHelper::getCurrentRequestFileSafe($uploadField);
-        if ($uploadedFile===null) {
+        if ($uploadedFile === null) {
             return;
         }
 
@@ -342,7 +345,7 @@ trait Uploadable
     {
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
 
-        return FileHelper::checkDirExistOrCreate($uploadFieldPath,
+        return DirHelper::checkDirExistOrCreate($uploadFieldPath,
             $this->getUploadOptionsOrDefault()->uploadCreateDirModeMask);
     }
 
@@ -364,7 +367,7 @@ trait Uploadable
         }
 
         //check if exists or try to create dir
-        if (!FileHelper::checkDirExistOrCreate($uploadFieldPath,
+        if (!DirHelper::checkDirExistOrCreate($uploadFieldPath,
             $this->getUploadOptionsOrDefault()->uploadCreateDirModeMask)
         ) {
             return '';
@@ -417,22 +420,32 @@ trait Uploadable
      */
     public function getUploadFileUrl(string $uploadField) : string
     {
-        $fallBack = '';
-
         $Url = $this->getUploadFileFullPath($uploadField);
-        if($Url===null || $Url=='')
-        {
-            return $fallBack;
-        }
 
-        $uploadFieldPath = str_replace(public_path(), '', $Url);
+        $uploadFieldPath = $this->removePublicPath($Url);
 
-        if ($uploadFieldPath === null || $uploadFieldPath == '' || $uploadFieldPath == '/') {
-            return $fallBack;
-        }
-
-        return URL::to($uploadFieldPath);
+        return $uploadFieldPath == '' ? '' : URL::to($uploadFieldPath);
     }
+
+    /**
+     * get a path and remove public_path.
+     * @param string $path
+     * @return string
+     */
+    public function removePublicPath(string $path) : string
+    {
+        if ($path == '') {
+            return '';
+        }
+        $path = str_replace(public_path(), '', $path);
+
+        if ($path == '' || $path == '/') {
+            return '';
+        }
+
+        return $path;
+    }
+
     /**
      * Return the base url (without filename) for the passed attribute.
      * Returns empty string if dir if not exists.
@@ -442,18 +455,12 @@ trait Uploadable
      */
     public function getUploadFileBaseUrl(string $uploadField) : string
     {
-        $fallBack = '';
-
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
-        if($uploadFieldPath===null || $uploadFieldPath=='')
-        {
-            return $fallBack;
-        }
 
-        $uploadFieldPath = DirHelper::addFinalSlash(str_replace(public_path(), '', $uploadFieldPath));
+        $uploadFieldPath = DirHelper::addFinalSlash($this->removePublicPath($uploadFieldPath));
 
-        if ($uploadFieldPath === null || $uploadFieldPath == '' || $uploadFieldPath == '/') {
-            return $fallBack;
+        if ($uploadFieldPath == '' || $uploadFieldPath == '/') {
+            return '';
         }
 
         return URL::to($uploadFieldPath);
