@@ -6,9 +6,15 @@ use File;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as Orchestra;
+use Padosoft\Test\traits\ExceptionTestable;
+use Padosoft\Test\traits\FileSystemTestable;
+use Padosoft\Laravel\Request\UploadedFileTestable;
+
 
 abstract class TestCase extends Orchestra
 {
+    use ExceptionTestable, FileSystemTestable, UploadedFileTestable;
+
     /**
      * @var \Padosoft\Uploadable\Test\Integration\TestModel
      */
@@ -19,6 +25,15 @@ abstract class TestCase extends Orchestra
         parent::setUp();
 
         $this->setUpDatabase($this->app);
+
+        //init files and paths needed for tests.
+        $this->initFileAndPath(__DIR__);
+    }
+
+    protected function tearDown()
+    {
+        //remove created path during test
+        $this->removeCreatedPathDuringTest(__DIR__);
     }
 
     /**
@@ -67,5 +82,10 @@ abstract class TestCase extends Orchestra
     public function getTempDirectory() : string
     {
         return __DIR__.DIRECTORY_SEPARATOR.'temp';
+    }
+
+    public function getSysTempDirectory() : string
+    {
+        return sys_get_temp_dir();
     }
 }

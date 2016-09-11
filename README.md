@@ -16,7 +16,8 @@ This package provides a trait that will automatic handlind upload when saving/up
 - illuminate/support: ^5.0
 - illuminate/http: ^5.0
 - padosoft/laravel-request: ^1.0
-- padosoft/io: 1.*
+- padosoft/io: ^1.0
+- padosoft/support: ^1.0
   
 ## Installation
 

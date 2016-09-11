@@ -27,30 +27,54 @@ trait Uploadable
      */
     public static function bootUploadable()
     {
+        self::bindCreateEvents();
+        self::bindSaveEvents();
+        self::bindUpdateEvents();
+        self::bindDeleteEvents();
+    }
+
+    /**
+     * Bind create model events.
+     */
+    protected static function bindCreateEvents()
+    {
         static::creating(function ($model) {
             $model->uploadOptions = $model->getUploadOptionsOrDefault();
             $model->guardAgainstInvalidUploadOptions();
         });
+    }
 
+    /**
+     * Bind save model events.
+     */
+    protected static function bindSaveEvents()
+    {
         static::saving(function (Model $model) {
             $model->generateAllNewUploadFileNameAndSetAttribute();
         });
         static::saved(function (Model $model) {
             $model->uploadFiles();
         });
+    }
 
+    /**
+     * Bind update model events.
+     */
+    protected static function bindUpdateEvents()
+    {
         static::updating(function (Model $model) {
             $model->generateAllNewUploadFileNameAndSetAttribute();
         });
         static::updated(function (Model $model) {
             $model->uploadFiles();
         });
+    }
 
-        static::deleting(function (Model $model) {
-            $model->uploadOptions = $model->getUploadOptionsOrDefault();
-            $model->guardAgainstInvalidUploadOptions();
-        });
-
+    /**
+     * Bind delete model events.
+     */
+    protected static function bindDeleteEvents()
+    {
         static::deleting(function (Model $model) {
             $model->uploadOptions = $model->getUploadOptionsOrDefault();
             $model->guardAgainstInvalidUploadOptions();
@@ -106,11 +130,6 @@ trait Uploadable
             return;
         }
 
-        //check request for valid files and server for correct paths defined in model
-        if (!$this->requestHasValidFilesAndCorrectPaths()) {
-            return;
-        }
-
         //loop for every upload model attributes and do upload if has a file in request
         foreach ($this->getUploadsAttributesSafe() as $uploadField) {
             $this->uploadFile($uploadField);
@@ -137,7 +156,10 @@ trait Uploadable
         }
 
         //do the work
-        $this->doUpload($uploadedFile, $uploadField);
+        $newName = $this->doUpload($uploadedFile, $uploadField);
+
+        //save on db (not call model save because invoke event and entering in loop)
+        $this->updateDb($uploadField, $newName);
     }
 
     /**
@@ -147,16 +169,16 @@ trait Uploadable
      * @param string $uploadAttribute
      * @return string
      */
-    public function doUpload(UploadedFile $uploadedFile, $uploadAttribute) : string
+    protected function doUpload(UploadedFile $uploadedFile, $uploadAttribute) : string
     {
-        if (($this->id < 1) || !$uploadedFile || !$uploadAttribute) {
+        if (!$uploadedFile || !$uploadAttribute) {
             return '';
         }
 
         //get file name by attribute
         $newName = $this->{$uploadAttribute};
 
-        //get upload path to store
+        //get upload path to store (method create dir if not exists and return '' if it failed)
         $pathToStore = $this->getUploadFileBasePath($uploadAttribute);
 
         //delete if file already exists
@@ -166,8 +188,8 @@ trait Uploadable
         try {
             $targetFile = $uploadedFile->move($pathToStore, $newName);
         } catch (\Symfony\Component\HttpFoundation\File\Exception\FileException $e) {
+            $targetFile = null;
             Log::warning('Error in doUpload() when try to move ' . $newName . ' to folder: ' . $pathToStore . PHP_EOL . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
-            return '';
         }
 
         return $targetFile ? $newName : '';
@@ -177,7 +199,7 @@ trait Uploadable
      * Check request for valid files and server for correct paths defined in model
      * @return bool
      */
-    protected function requestHasValidFilesAndCorrectPaths() : bool
+    public function requestHasValidFilesAndCorrectPaths() : bool
     {
         //current request has not uploaded files
         if (!RequestHelper::currentRequestHasFiles()) {
@@ -201,10 +223,10 @@ trait Uploadable
      */
     public function generateNewUploadFileName(UploadedFile $uploadedFile, string $uploadField) : string
     {
-        if (!$uploadField) {
+        if (!$uploadedFile) {
             return '';
         }
-        if (!$uploadedFile) {
+       if (!$this->id && $this->getUploadOptionsOrDefault()->appendModelIdSuffixInUploadedFileName) {
             return '';
         }
 
@@ -223,7 +245,7 @@ trait Uploadable
      * @param UploadedFile $uploadedFile
      * @return string
      */
-    protected function calcolateNewUploadFileName(UploadedFile $uploadedFile) : string
+    public function calcolateNewUploadFileName(UploadedFile $uploadedFile) : string
     {
         if (!$this->getUploadOptionsOrDefault()->appendModelIdSuffixInUploadedFileName) {
             return '';
@@ -234,7 +256,7 @@ trait Uploadable
         $ext = $uploadedFile->getClientOriginalExtension();
 
         $newName = $filenameWithoutExtension . $this->getUploadOptionsOrDefault()->uploadFileNameSuffixSeparator . $this->id . '.' . $ext;
-        return $newName;
+        return sanitize_filename($newName);
     }
 
     /**
@@ -277,15 +299,17 @@ trait Uploadable
      * Reset model attribute and update db field
      * @param string $uploadField
      */
-    protected function setBlanckAttributeAndDB(string $uploadField)
+    public function setBlanckAttributeAndDB(string $uploadField)
     {
+        if (!$uploadField) {
+            return;
+        }
+
         //set to black attribute
         $this->{$uploadField} = '';
 
         //save on db (not call model save because invoke event and entering in loop)
-        DB::table($this->getTable())
-            ->where('id', $this->id)
-            ->update([$uploadField => '']);
+        $this->updateDb($uploadField, '');
     }
 
     /**
@@ -297,7 +321,7 @@ trait Uploadable
     {
         foreach ($this->getUploadsAttributesSafe() as $uploadField) {
             //for performance if one attribute has value exit false
-            if ($this->{$uploadField}) {
+            if ($uploadField && $this->{$uploadField}) {
                 return false;
             }
         }
@@ -358,7 +382,7 @@ trait Uploadable
     public function getUploadFileBasePath(string $uploadField) : string
     {
         //default model upload path
-        $uploadFieldPath = $this->getUploadOptionsOrDefault()->uploadBasePath;
+        $uploadFieldPath = DirHelper::canonicalize($this->getUploadOptionsOrDefault()->uploadBasePath);
 
         //overwrite if there is specific path for the field
         $specificPath = $this->getUploadFileBasePathSpecific($uploadField);
@@ -377,20 +401,22 @@ trait Uploadable
     }
 
     /**
-     * Return the specific upload path (by uploadPaths prop) for the passed attribute if exists, otherwise return empty string.
+     * Return the specific upload path (by uploadPaths prop) for the passed attribute if exists,
+     * otherwise return empty string.
+     * If uploadPaths for this field is relative, a public_path was appended.
      * @param string $uploadField
      * @return string
      */
     public function getUploadFileBasePathSpecific(string $uploadField) : string
     {
         //check if there is a specified upload path
-        if (!empty($this->getUploadOptionsOrDefault()->uploadPaths) && count($this->getUploadOptionsOrDefault()->uploadPaths) > 0 && array_key_exists($uploadField,
-                $this->getUploadOptionsOrDefault()->uploadPaths)
+        if (empty($this->getUploadOptionsOrDefault()->uploadPaths) || count($this->getUploadOptionsOrDefault()->uploadPaths) < 1
+            || !array_key_exists($uploadField, $this->getUploadOptionsOrDefault()->uploadPaths)
         ) {
-            return public_path($this->getUploadOptionsOrDefault()->uploadPaths[$uploadField]);
+            return '';
         }
-
-        return '';
+        $path = $this->getUploadOptionsOrDefault()->uploadPaths[$uploadField];
+        return DirHelper::isAbsolute($path) ? DirHelper::canonicalize($path) : DirHelper::canonicalize(public_path($path));
     }
 
     /**
@@ -404,7 +430,7 @@ trait Uploadable
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
         $uploadFieldPath = DirHelper::addFinalSlash($uploadFieldPath) . $this->{$uploadField};
 
-        if ($uploadFieldPath === null || $uploadFieldPath == '' || $uploadFieldPath == '/') {
+        if ($this->isSlashOrEmptyDir($uploadFieldPath)) {
             return '';
         }
 
@@ -422,7 +448,7 @@ trait Uploadable
     {
         $Url = $this->getUploadFileFullPath($uploadField);
 
-        $uploadFieldPath = $this->removePublicPath($Url);
+        $uploadFieldPath = DirHelper::canonicalize($this->removePublicPath($Url));
 
         return $uploadFieldPath == '' ? '' : URL::to($uploadFieldPath);
     }
@@ -437,9 +463,8 @@ trait Uploadable
         if ($path == '') {
             return '';
         }
-        $path = str_replace(public_path(), '', $path);
-
-        if ($path == '' || $path == '/') {
+        $path = str_replace(DirHelper::canonicalize(public_path()), '', DirHelper::canonicalize($path));
+        if ($this->isSlashOrEmptyDir($path)) {
             return '';
         }
 
@@ -457,9 +482,9 @@ trait Uploadable
     {
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
 
-        $uploadFieldPath = DirHelper::addFinalSlash($this->removePublicPath($uploadFieldPath));
+        $uploadFieldPath = DirHelper::canonicalize(DirHelper::addFinalSlash($this->removePublicPath($uploadFieldPath)));
 
-        if ($uploadFieldPath == '' || $uploadFieldPath == '/') {
+        if ($this->isSlashOrEmptyDir($uploadFieldPath)) {
             return '';
         }
 
@@ -482,7 +507,7 @@ trait Uploadable
      */
     public function generateNewUploadFileNameAndSetAttribute(string $uploadField)
     {
-        if ($uploadField === null || trim($uploadField) == '') {
+        if (!trim($uploadField)) {
             return;
         }
 
@@ -498,5 +523,28 @@ trait Uploadable
 
         //set attribute
         $this->{$uploadField} = $newName;
+    }
+
+    /**
+     * @param string $uploadField
+     * @param $newName
+     */
+    public function updateDb(string $uploadField, $newName)
+    {
+        if ($this->id < 1) {
+            return;
+        }
+        DB::table($this->getTable())
+            ->where('id', $this->id)
+            ->update([$uploadField => $newName]);
+    }
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function isSlashOrEmptyDir(string $path):bool
+    {
+        return $path === null || $path == '' || $path == '\/' || $path == DIRECTORY_SEPARATOR;
     }
 }

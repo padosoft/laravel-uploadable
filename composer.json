@@ -21,11 +21,14 @@
         "illuminate/database": "^5.0",
         "illuminate/support": "^5.0",
         "padosoft/io": "1.*",
-        "padosoft/laravel-request": "^1.0"
+        "padosoft/laravel-request": "^1.0",
+        "padosoft/support": "^1.6"
     },
     "require-dev": {
         "orchestra/testbench": "^3.2",
-        "phpunit/phpunit": "^5.0"
+        "phpunit/phpunit": "^5.0",
+        "mockery/mockery": "^0.9.5",
+        "padosoft/test": "^0.2.2"
     },
     "autoload": {
         "psr-4": {

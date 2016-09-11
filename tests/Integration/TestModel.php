@@ -34,7 +34,7 @@ class TestModel extends Model
     }
 
     /**
-     * Set the options for generating the slug.
+     * Set the Uploadable trait options.
      * @param UploadOptions $uploadOptions
      * @return TestModel
      */
