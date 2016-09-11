@@ -11,6 +11,11 @@ env:
 before_script:
   - travis_retry composer self-update
   - travis_retry composer update ${COMPOSER_FLAGS} --no-interaction --prefer-source
+  - chmod 777 -R ./
+  - chmod 777 -R /home/travis/build/padosoft/laravel-uploadable/tests
+  - chmod 777 -R /home/travis/build/padosoft/laravel-uploadable/tests/Integration
+  - mkdir /home/travis/build/padosoft/laravel-uploadable/tests/Integration/resources
+  - chmod 777 -R /home/travis/build/padosoft/laravel-uploadable/tests/Integration/resources
 
 script:
   - phpunit --coverage-text --coverage-clover=coverage.clover
