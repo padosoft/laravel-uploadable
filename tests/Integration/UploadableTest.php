@@ -331,9 +331,9 @@ class UploadableTest extends TestCase
             }
         };
         $options = $model->getUploadOptionsOrDefault();
-        $this->assertEquals('dummy.txt', $model->generateNewUploadFileName($uploadedFile, 'image'));
+        $this->assertEquals('dummy.txt', $model->generateNewUploadFileName($uploadedFile));
 
-        $this->assertEquals('dummy.txt', $model->generateNewUploadFileName($uploadedFile, ''));
+        $this->assertEquals('dummy.txt', $model->generateNewUploadFileName($uploadedFile));
 
         $model = new class extends TestModel
         {
@@ -346,12 +346,12 @@ class UploadableTest extends TestCase
             }
         };
         $options = $model->getUploadOptionsOrDefault();
-        $this->assertEquals('', $model->generateNewUploadFileName($uploadedFile, 'image'));
+        $this->assertEquals('', $model->generateNewUploadFileName($uploadedFile));
         $model->name = 'dummy.txt';
         $model->image = 'dummy.txt';
         $model->save();
         $model->first();
-        $this->assertEquals('dummy-'.$model->id.'.txt', $model->generateNewUploadFileName($uploadedFile, 'image'));
+        $this->assertEquals('dummy-'.$model->id.'.txt', $model->generateNewUploadFileName($uploadedFile));
     }
 
     /**

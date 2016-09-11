@@ -218,10 +218,10 @@ trait Uploadable
      * Generate a new file name for uploaded file.
      * Return empty string if uploadedFile is null, otherwise return the new file name..
      * @param UploadedFile $uploadedFile
-     * @param string $uploadField
      * @return string
+     * @internal param string $uploadField
      */
-    public function generateNewUploadFileName(UploadedFile $uploadedFile, string $uploadField) : string
+    public function generateNewUploadFileName(UploadedFile $uploadedFile) : string
     {
         if (!$uploadedFile) {
             return '';
@@ -516,7 +516,7 @@ trait Uploadable
         if ($uploadedFile === null) {
             return;
         }
-        $newName = $this->generateNewUploadFileName($uploadedFile, $uploadField);
+        $newName = $this->generateNewUploadFileName($uploadedFile);
         if ($newName == '') {
             return;
         }
@@ -527,9 +527,9 @@ trait Uploadable
 
     /**
      * @param string $uploadField
-     * @param $newName
+     * @param string $newName
      */
-    public function updateDb(string $uploadField, $newName)
+    public function updateDb(string $uploadField, string $newName)
     {
         if ($this->id < 1) {
             return;
