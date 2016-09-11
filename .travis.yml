@@ -16,6 +16,8 @@ before_script:
   - chmod 777 -R /home/travis/build/padosoft/laravel-uploadable/tests/Integration
   - mkdir /home/travis/build/padosoft/laravel-uploadable/tests/Integration/resources
   - chmod 777 -R /home/travis/build/padosoft/laravel-uploadable/tests/Integration/resources
+  - mkdir /home/travis/build/padosoft/laravel-uploadable/tests/Integration/resources/subdir
+  - chmod 777 -R /home/travis/build/padosoft/laravel-uploadable/tests/Integration/resources/subdir
 
 script:
   - phpunit --coverage-text --coverage-clover=coverage.clover
