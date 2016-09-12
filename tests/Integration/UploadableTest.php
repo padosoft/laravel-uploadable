@@ -5,15 +5,17 @@ namespace Padosoft\Uploadable\Test\Integration;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
-use League\Flysystem\Exception;
 use Padosoft\Io\DirHelper;
+use Padosoft\Io\FileHelper;
 use Padosoft\Uploadable\UploadOptions;
 use Padosoft\Laravel\Request\RequestHelper;
-use Padosoft\Laravel\Request\UploadedFileHelper;
 use Padosoft\Uploadable\InvalidOption;
+use Padosoft\Laravel\Request\RequestTestable;
 
 class UploadableTest extends TestCase
 {
+    use RequestTestable;
+
     /** @test */
     public function dummy_test()
     {
@@ -24,7 +26,7 @@ class UploadableTest extends TestCase
         */
 
         $uploadedFile = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.txt');
-        $this->assertFileExists($this->getSysTempDirectory().'/dummy.txt');
+        $this->assertFileExists($this->getSysTempDirectory() . '/dummy.txt');
 
         $request = Request::create('/', 'GET', [], [], ['image' => $uploadedFile]);
         $result = RequestHelper::getFileSafe('image', $request);
@@ -97,7 +99,7 @@ class UploadableTest extends TestCase
     {
         $model = new TestModel();
         $model->updateDb('image', '');
-        $model->name='test';
+        $model->name = 'test';
         $model->save();
         $model->updateDb('image', 'dummy.txt');
         $this->assertEquals('dummy.txt', $model->first()->image);
@@ -111,8 +113,8 @@ class UploadableTest extends TestCase
     public function setBlanckAttributeAndDBTest()
     {
         $model = new TestModel();
-        $model->name='test';
-        $model->image='dummy.txt';
+        $model->name = 'test';
+        $model->image = 'dummy.txt';
         $model->save();
         $this->assertEquals('dummy.txt', TestModel::first()->image);
         $model->setBlanckAttributeAndDB('image');
@@ -123,28 +125,16 @@ class UploadableTest extends TestCase
     /**
      * @test
      */
-    public function deleteUploadedFile()
-    {
-    }
-
-    /**
-     * @test
-     */
     public function requestHasValidFilesAndCorrectPaths()
     {
         $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt');
-        $request = Request::create('/', 'GET', [], [], ['image' => $uploadedFile]);
-        $this->app->instance(Request::class, $request);
-        $this->app->instance('request', $request);
-
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
         $model = new TestModel();
         $options = $model->getUploadOptionsOrDefault();
         $this->assertEquals(true, $model->requestHasValidFilesAndCorrectPaths());
 
-        $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt','',UPLOAD_ERR_NO_FILE);
-        $request = Request::create('/', 'GET', [], [], ['image' => $uploadedFile]);
-        $this->app->instance(Request::class, $request);
-        $this->app->instance('request', $request);
+        $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt', '', UPLOAD_ERR_NO_FILE);
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
         $this->assertEquals(true, $model->requestHasValidFilesAndCorrectPaths());
     }
 
@@ -156,17 +146,17 @@ class UploadableTest extends TestCase
         $model = new TestModel();
         $model->getUploadOptionsOrDefault()->uploads = ['image', 'image_mobile'];
         $this->assertEquals(true, $model->checkIfAllUploadFieldsAreEmpty());
-        $model->image='dummy.txt';
-        $model->image_mobile='';
+        $model->image = 'dummy.txt';
+        $model->image_mobile = '';
         $this->assertEquals(false, $model->checkIfAllUploadFieldsAreEmpty());
-        $model->image='';
-        $model->image_mobile='dummy.txt';
+        $model->image = '';
+        $model->image_mobile = 'dummy.txt';
         $this->assertEquals(false, $model->checkIfAllUploadFieldsAreEmpty());
-        $model->image='dummy.txt';
-        $model->image_mobile='dummy.txt';
+        $model->image = 'dummy.txt';
+        $model->image_mobile = 'dummy.txt';
         $this->assertEquals(false, $model->checkIfAllUploadFieldsAreEmpty());
-        $model->image='';
-        $model->image_mobile='';
+        $model->image = '';
+        $model->image_mobile = '';
         $this->assertEquals(true, $model->checkIfAllUploadFieldsAreEmpty());
     }
 
@@ -210,16 +200,16 @@ class UploadableTest extends TestCase
      */
     public function checkOrCreateUploadBasePath()
     {
-        $path = $this->getSysTempDirectory().DIRECTORY_SEPARATOR.'upload';
+        $path = $this->getSysTempDirectory() . DIRECTORY_SEPARATOR . 'upload';
         $model = new TestModel();
         $model->getUploadOptionsOrDefault()->uploadBasePath = $path;
         $this->assertEquals(true, $model->checkOrCreateUploadBasePath('image'));
         $this->fileExists($path);
-        $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'upload'.DIRECTORY_SEPARATOR.'dummy'];
+        $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'upload' . DIRECTORY_SEPARATOR . 'dummy'];
         $this->assertEquals(true, $model->checkOrCreateUploadBasePath('image'));
-        $this->fileExists(public_path('upload'.DIRECTORY_SEPARATOR.'dummy'));
+        $this->fileExists(public_path('upload' . DIRECTORY_SEPARATOR . 'dummy'));
         @unlink($path);
-        @unlink(public_path('upload'.DIRECTORY_SEPARATOR.'dummy'));
+        @unlink(public_path('upload' . DIRECTORY_SEPARATOR . 'dummy'));
     }
 
     /**
@@ -227,7 +217,7 @@ class UploadableTest extends TestCase
      */
     public function getUploadFileBasePath()
     {
-        $path = $this->getSysTempDirectory().DIRECTORY_SEPARATOR.'upload';
+        $path = $this->getSysTempDirectory() . DIRECTORY_SEPARATOR . 'upload';
         $model = new TestModel();
         $model->getUploadOptionsOrDefault()->uploadBasePath = $path;
         $this->assertEquals(DirHelper::canonicalize($path), $model->getUploadFileBasePath('image'));
@@ -245,7 +235,8 @@ class UploadableTest extends TestCase
         $model = new TestModel();
         $this->assertEquals('', $model->getUploadFileBasePathSpecific('image'));
         $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'dummy/'];
-        $this->assertEquals(DirHelper::canonicalize(public_path('dummy/')), $model->getUploadFileBasePathSpecific('image'));
+        $this->assertEquals(DirHelper::canonicalize(public_path('dummy/')),
+            $model->getUploadFileBasePathSpecific('image'));
         $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => '/var/www/vhosts/dummy.com/upload/'];
         $this->assertEquals('/var/www/vhosts/dummy.com/upload', $model->getUploadFileBasePathSpecific('image'));
     }
@@ -258,9 +249,11 @@ class UploadableTest extends TestCase
         $model = new TestModel();
         $model->image = 'dummy.txt';
         $model->getUploadOptionsOrDefault()->uploadBasePath = public_path('dummy/');
-        $this->assertEquals(DirHelper::canonicalize(public_path('dummy/').$model->image), $model->getUploadFileFullPath('image'));
+        $this->assertEquals(DirHelper::canonicalize(public_path('dummy/') . $model->image),
+            $model->getUploadFileFullPath('image'));
         $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'dummy2/'];
-        $this->assertEquals(DirHelper::canonicalize(public_path('dummy2/').$model->image), $model->getUploadFileFullPath('image'));
+        $this->assertEquals(DirHelper::canonicalize(public_path('dummy2/') . $model->image),
+            $model->getUploadFileFullPath('image'));
     }
 
     /**
@@ -271,9 +264,9 @@ class UploadableTest extends TestCase
         $model = new TestModel();
         $model->image = 'dummy.txt';
         $model->getUploadOptionsOrDefault()->uploadBasePath = public_path('dummy/');
-        $this->assertEquals(URL::to('dummy/'.$model->image), $model->getUploadFileUrl('image'));
+        $this->assertEquals(URL::to('dummy/' . $model->image), $model->getUploadFileUrl('image'));
         $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'dummy2/'];
-        $this->assertEquals(URL::to('dummy2/'.$model->image), $model->getUploadFileUrl('image'));
+        $this->assertEquals(URL::to('dummy2/' . $model->image), $model->getUploadFileUrl('image'));
     }
 
     /**
@@ -297,7 +290,8 @@ class UploadableTest extends TestCase
         $this->assertEquals('', $model->removePublicPath(''));
         $this->assertEquals('', $model->removePublicPath(public_path('')));
         $this->assertEquals('', $model->removePublicPath(public_path('/')));
-        $this->assertEquals(DirHelper::canonicalize(DIRECTORY_SEPARATOR.'upload/image'), $model->removePublicPath(public_path('upload/image')));
+        $this->assertEquals(DirHelper::canonicalize(DIRECTORY_SEPARATOR . 'upload/image'),
+            $model->removePublicPath(public_path('upload/image')));
     }
 
     /**
@@ -326,8 +320,7 @@ class UploadableTest extends TestCase
             {
                 return UploadOptions::create()->getUploadOptionsDefault()
                     ->dontAppendModelIdSuffixInFileName()
-                    ->setFileNameSuffixSeparator('-')
-                    ;
+                    ->setFileNameSuffixSeparator('-');
             }
         };
         $options = $model->getUploadOptionsOrDefault();
@@ -341,8 +334,7 @@ class UploadableTest extends TestCase
             {
                 return UploadOptions::create()->getUploadOptionsDefault()
                     ->appendModelIdSuffixInFileName()
-                    ->setFileNameSuffixSeparator('-')
-                    ;
+                    ->setFileNameSuffixSeparator('-');
             }
         };
         $options = $model->getUploadOptionsOrDefault();
@@ -351,7 +343,7 @@ class UploadableTest extends TestCase
         $model->image = 'dummy.txt';
         $model->save();
         $model->first();
-        $this->assertEquals('dummy-'.$model->id.'.txt', $model->generateNewUploadFileName($uploadedFile));
+        $this->assertEquals('dummy-' . $model->id . '.txt', $model->generateNewUploadFileName($uploadedFile));
     }
 
     /**
@@ -367,8 +359,7 @@ class UploadableTest extends TestCase
             {
                 return UploadOptions::create()->getUploadOptionsDefault()
                     ->dontAppendModelIdSuffixInFileName()
-                    ->setFileNameSuffixSeparator('-')
-                    ;
+                    ->setFileNameSuffixSeparator('-');
             }
         };
         $options = $model->getUploadOptionsOrDefault();
@@ -380,13 +371,12 @@ class UploadableTest extends TestCase
             {
                 return UploadOptions::create()->getUploadOptionsDefault()
                     ->appendModelIdSuffixInFileName()
-                    ->setFileNameSuffixSeparator('-')
-                    ;
+                    ->setFileNameSuffixSeparator('-');
             }
         };
         $options = $model->getUploadOptionsOrDefault();
         $model->first();
-        $this->assertEquals('dummy-'.$model->id.'.txt', $model->calcolateNewUploadFileName($uploadedFile));
+        $this->assertEquals('dummy-' . $model->id . '.txt', $model->calcolateNewUploadFileName($uploadedFile));
     }
 
     /**
@@ -395,35 +385,34 @@ class UploadableTest extends TestCase
     public function generateAllNewUploadFileNameAndSetAttribute()
     {
         $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt');
-        $request = Request::create('/', 'GET', [], [], ['image' => $uploadedFile, 'image_mobile' => $uploadedFile]);
-        $this->app->instance(Request::class, $request);
-        $this->app->instance('request', $request);
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile, 'image_mobile' => $uploadedFile]);
 
         $model = new TestModel();
         $model->generateAllNewUploadFileNameAndSetAttribute();
         $this->assertEquals('', $model->image);
         $model->first();
-        $model->name='dummy.txt';
-        $model->image='dummy.txt';
-        $model->image_mobile='dummy.txt';
+        $model->name = 'dummy.txt';
+        $model->image = 'dummy.txt';
+        $model->image_mobile = 'dummy.txt';
         $model->save();
-        $model->image='';
-        $model->image_mobile='';
+        $model->image = '';
+        $model->image_mobile = '';
         $options = $model->getUploadOptionsOrDefault();
         $model->generateAllNewUploadFileNameAndSetAttribute();
-        $this->assertEquals('dummy_'.$model->id.'.txt', $model->image);
-        $this->assertEquals('dummy_'.$model->id.'.txt', $model->image_mobile);
+        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image);
+        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image_mobile);
 
-        $uploadedFileKO = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt','',1);
-        $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt','',1);
-        $request = Request::create('/', 'GET', [], [], ['image' => $uploadedFileKO, 'image_mobile' => $uploadedFile]);
-        $this->app->instance(Request::class, $request);
-        $this->app->instance('request', $request);
-        $model->image='';
-        $model->image_mobile='';
+        $uploadedFileKO = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt', '', 1);
+        $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt', '', 1);
+        $request = $this->getRequestAndBindItForUploadTest([
+            'image' => $uploadedFileKO,
+            'image_mobile' => $uploadedFile
+        ]);
+        $model->image = '';
+        $model->image_mobile = '';
         $model->generateAllNewUploadFileNameAndSetAttribute();
-        $this->assertEquals('dummy_'.$model->id.'.txt', $model->image);
-        $this->assertEquals('dummy_'.$model->id.'.txt', $model->image_mobile);
+        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image);
+        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image_mobile);
     }
 
     /**
@@ -432,27 +421,23 @@ class UploadableTest extends TestCase
     public function generateNewUploadFileNameAndSetAttribute()
     {
         $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt');
-        $request = Request::create('/', 'GET', [], [], ['image' => $uploadedFile]);
-        $this->app->instance(Request::class, $request);
-        $this->app->instance('request', $request);
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
 
         $model = new TestModel();
         $model->generateNewUploadFileNameAndSetAttribute('');
         $this->assertEquals('', $model->image);
         $model->first();
-        $model->name='dummy.txt';
-        $model->image='dummy.txt';
+        $model->name = 'dummy.txt';
+        $model->image = 'dummy.txt';
         $model->save();
-        $model->image='';
+        $model->image = '';
         $options = $model->getUploadOptionsOrDefault();
         $model->generateNewUploadFileNameAndSetAttribute('image');
-        $this->assertEquals('dummy_'.$model->id.'.txt', $model->image);
+        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image);
 
-        $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt','',1);
-        $request = Request::create('/', 'GET', [], [], ['image' => $uploadedFile]);
-        $this->app->instance(Request::class, $request);
-        $this->app->instance('request', $request);
-        $model->image='';
+        $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt', '', 1);
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
+        $model->image = '';
         $model->generateNewUploadFileNameAndSetAttribute('');
         $this->assertEquals('', $model->image);
     }
@@ -462,6 +447,32 @@ class UploadableTest extends TestCase
      */
     public function uploadFilesTest()
     {
+        $model = new TestModel();
+        $options = $model->getUploadOptionsOrDefault();
+        $model->image = '';
+        $model->uploadFiles();
+        $this->assertEquals('', $model->image);
+
+        $uploadedFile = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.txt');
+        $uploadedFile2 = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.csv');
+        $options->setMimeType([mime_content_type(__DIR__ . '/resources/dummy.txt'),
+                                mime_content_type(__DIR__ . '/resources/dummy.csv')]);
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile, 'image_mobile' => $uploadedFile2]);
+
+        $options->setUploadBasePath(DirHelper::njoin($this->getSysTempDirectory(), 'upload'));
+        $model->name = 'dummy.txt';
+        $model->image = 'dummy.txt';
+        $model->image_mobile = 'dummy.csv';
+        $model->save();
+
+        $this->assertTrue($model->id>0);
+        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image);
+        $this->assertEquals('dummy_' . $model->id . '.csv', $model->image_mobile);
+        $this->assertFileExists(DirHelper::njoin($options->uploadBasePath, $model->image));
+        $this->assertFileExists(DirHelper::njoin($options->uploadBasePath, $model->image_mobile));
+        @unlink(DirHelper::njoin($options->uploadBasePath, $model->image));
+        @unlink(DirHelper::njoin($options->uploadBasePath, $model->image_mobile));
+        @unlink($options->uploadBasePath);
     }
 
     /**
@@ -469,6 +480,23 @@ class UploadableTest extends TestCase
      */
     public function uploadFileTest()
     {
+        $model = new TestModel();
+        $options = $model->getUploadOptionsOrDefault();
+
+        $uploadedFile = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.txt');
+        $options->setMimeType([mime_content_type(__DIR__ . '/resources/dummy.txt')]);
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
+
+        $options->setUploadBasePath(DirHelper::njoin($this->getSysTempDirectory(), 'upload'));
+        $model->name = 'dummy.txt';
+        $model->image = 'dummy.txt';
+        $model->save();
+
+        $this->assertTrue($model->id>0);
+        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image);
+        $this->assertFileExists(DirHelper::njoin($options->uploadBasePath, $model->image));
+        @unlink(DirHelper::njoin($options->uploadBasePath, $model->image));
+        @unlink($options->uploadBasePath);
     }
 
     /**
@@ -482,6 +510,13 @@ class UploadableTest extends TestCase
      * @test
      */
     public function deleteUploadedFiles()
+    {
+    }
+
+    /**
+     * @test
+     */
+    public function deleteUploadedFile()
     {
     }
 }

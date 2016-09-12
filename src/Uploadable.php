@@ -49,9 +49,11 @@ trait Uploadable
      */
     protected static function bindSaveEvents()
     {
+        /*
         static::saving(function (Model $model) {
             $model->generateAllNewUploadFileNameAndSetAttribute();
         });
+        */
         static::saved(function (Model $model) {
             $model->uploadFiles();
         });
@@ -62,9 +64,11 @@ trait Uploadable
      */
     protected static function bindUpdateEvents()
     {
+        /*
         static::updating(function (Model $model) {
             $model->generateAllNewUploadFileNameAndSetAttribute();
         });
+        */
         static::updated(function (Model $model) {
             $model->uploadFiles();
         });
@@ -155,6 +159,9 @@ trait Uploadable
             return;
         }
 
+        //calcolate new file name and set it to model attribute
+        $this->generateNewUploadFileNameAndSetAttribute($uploadField);
+
         //do the work
         $newName = $this->doUpload($uploadedFile, $uploadField);
 
@@ -182,7 +189,7 @@ trait Uploadable
         $pathToStore = $this->getUploadFileBasePath($uploadAttribute);
 
         //delete if file already exists
-        FileHelper::unlinkSafe($pathToStore . '/' . $newName);
+        FileHelper::unlinkSafe(DirHelper::njoin($pathToStore,$newName));
 
         //move file to destination folder
         try {
@@ -288,7 +295,7 @@ trait Uploadable
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
 
         //unlink file
-        $path = sprintf("%s/%s", $uploadFieldPath, $this->{$uploadField});
+        $path = DirHelper::njoin($uploadFieldPath, $this->{$uploadField});
         FileHelper::unlinkSafe($path);
 
         //reset model attribute and update db field
