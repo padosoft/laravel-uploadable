@@ -49,11 +49,6 @@ trait Uploadable
      */
     protected static function bindSaveEvents()
     {
-        /*
-        static::saving(function (Model $model) {
-            $model->generateAllNewUploadFileNameAndSetAttribute();
-        });
-        */
         static::saved(function (Model $model) {
             $model->uploadFiles();
         });
@@ -64,13 +59,9 @@ trait Uploadable
      */
     protected static function bindUpdateEvents()
     {
-        /*
         static::updating(function (Model $model) {
-            $model->generateAllNewUploadFileNameAndSetAttribute();
-        });
-        */
-        static::updated(function (Model $model) {
-            $model->uploadFiles();
+            //check if there is old files to delete
+            $model->checkIfNeedToDeleteOldFiles();
         });
     }
 
@@ -82,6 +73,8 @@ trait Uploadable
         static::deleting(function (Model $model) {
             $model->uploadOptions = $model->getUploadOptionsOrDefault();
             $model->guardAgainstInvalidUploadOptions();
+            //check if there is old files to delete
+            $model->checkIfNeedToDeleteOldFiles();
         });
 
         static::deleted(function (Model $model) {
@@ -176,9 +169,9 @@ trait Uploadable
      * @param string $uploadAttribute
      * @return string
      */
-    protected function doUpload(UploadedFile $uploadedFile, $uploadAttribute) : string
+    public function doUpload(UploadedFile $uploadedFile, $uploadAttribute) : string
     {
-        if (!$uploadedFile || !$uploadAttribute) {
+        if (!$uploadAttribute) {
             return '';
         }
 
@@ -189,7 +182,7 @@ trait Uploadable
         $pathToStore = $this->getUploadFileBasePath($uploadAttribute);
 
         //delete if file already exists
-        FileHelper::unlinkSafe(DirHelper::njoin($pathToStore,$newName));
+        FileHelper::unlinkSafe(DirHelper::njoin($pathToStore, $newName));
 
         //move file to destination folder
         try {
@@ -233,7 +226,7 @@ trait Uploadable
         if (!$uploadedFile) {
             return '';
         }
-       if (!$this->id && $this->getUploadOptionsOrDefault()->appendModelIdSuffixInUploadedFileName) {
+        if (!$this->id && $this->getUploadOptionsOrDefault()->appendModelIdSuffixInUploadedFileName) {
             return '';
         }
 
@@ -376,7 +369,7 @@ trait Uploadable
     {
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
 
-        return DirHelper::checkDirExistOrCreate($uploadFieldPath,
+        return $uploadFieldPath == '' ? '' : DirHelper::checkDirExistOrCreate($uploadFieldPath,
             $this->getUploadOptionsOrDefault()->uploadCreateDirModeMask);
     }
 
@@ -422,8 +415,14 @@ trait Uploadable
         ) {
             return '';
         }
+
         $path = $this->getUploadOptionsOrDefault()->uploadPaths[$uploadField];
-        return DirHelper::isAbsolute($path) ? DirHelper::canonicalize($path) : DirHelper::canonicalize(public_path($path));
+
+        if (DirHelper::isRelative($path)) {
+            $path = public_path($path);
+        }
+
+        return DirHelper::canonicalize($path);
     }
 
     /**
@@ -432,10 +431,13 @@ trait Uploadable
      * @param string $uploadField
      * @return string
      */
-    public function getUploadFileFullPath(string $uploadField) : string
+    public
+    function getUploadFileFullPath(
+        string $uploadField
+    ) : string
     {
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
-        $uploadFieldPath = DirHelper::addFinalSlash($uploadFieldPath) . $this->{$uploadField};
+        $uploadFieldPath = DirHelper::canonicalize(DirHelper::addFinalSlash($uploadFieldPath) . $this->{$uploadField});
 
         if ($this->isSlashOrEmptyDir($uploadFieldPath)) {
             return '';
@@ -451,7 +453,10 @@ trait Uploadable
      * @param string $uploadField
      * @return string
      */
-    public function getUploadFileUrl(string $uploadField) : string
+    public
+    function getUploadFileUrl(
+        string $uploadField
+    ) : string
     {
         $Url = $this->getUploadFileFullPath($uploadField);
 
@@ -465,7 +470,10 @@ trait Uploadable
      * @param string $path
      * @return string
      */
-    public function removePublicPath(string $path) : string
+    public
+    function removePublicPath(
+        string $path
+    ) : string
     {
         if ($path == '') {
             return '';
@@ -485,7 +493,10 @@ trait Uploadable
      * @param string $uploadField
      * @return string
      */
-    public function getUploadFileBaseUrl(string $uploadField) : string
+    public
+    function getUploadFileBaseUrl(
+        string $uploadField
+    ) : string
     {
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
 
@@ -501,7 +512,8 @@ trait Uploadable
     /**
      * Calcolate the new name for ALL uploaded files and set relative upload attributes
      */
-    public function generateAllNewUploadFileNameAndSetAttribute()
+    public
+    function generateAllNewUploadFileNameAndSetAttribute()
     {
         foreach ($this->getUploadsAttributesSafe() as $uploadField) {
             $this->generateNewUploadFileNameAndSetAttribute($uploadField);
@@ -512,8 +524,10 @@ trait Uploadable
      * Calcolate the new name for uploaded file relative to passed attribute name and set the upload attribute
      * @param string $uploadField
      */
-    public function generateNewUploadFileNameAndSetAttribute(string $uploadField)
-    {
+    public
+    function generateNewUploadFileNameAndSetAttribute(
+        string $uploadField
+    ) {
         if (!trim($uploadField)) {
             return;
         }
@@ -536,8 +550,11 @@ trait Uploadable
      * @param string $uploadField
      * @param string $newName
      */
-    public function updateDb(string $uploadField, string $newName)
-    {
+    public
+    function updateDb(
+        string $uploadField,
+        string $newName
+    ) {
         if ($this->id < 1) {
             return;
         }
@@ -550,8 +567,44 @@ trait Uploadable
      * @param string $path
      * @return bool
      */
-    public function isSlashOrEmptyDir(string $path):bool
+    public
+    function isSlashOrEmptyDir(
+        string $path
+    ):bool
     {
-        return $path === null || $path == '' || $path == '\/' || $path == DIRECTORY_SEPARATOR;
+        return isNullOrEmpty($path) || $path == '\/' || $path == DIRECTORY_SEPARATOR;
+    }
+
+    /**
+     * Check if all uploadedFields are changed, so there is an old value
+     * for attribute and if true try to unlink old file.
+     */
+    public
+    function checkIfNeedToDeleteOldFiles()
+    {
+        foreach ($this->getUploadsAttributesSafe() as $uploadField) {
+            $this->checkIfNeedToDeleteOldFile($uploadField);
+        }
+    }
+
+    /**
+     * Check if $uploadField are changed, so there is an old value
+     * for $uploadField attribute and if true try to unlink old file.
+     * @param string $uploadField
+     */
+    public
+    function checkIfNeedToDeleteOldFile(
+        string $uploadField
+    ) {
+        if (isNullOrEmpty($uploadField)
+            || !$this->isDirty($uploadField)
+            || ($this->{$uploadField} == $this->getOriginal($uploadField))
+        ) {
+            return;
+        }
+
+        $oldValue = $this->getOriginal($uploadField);
+
+        FileHelper::unlinkSafe(DirHelper::njoin($this->getUploadFileBasePath($uploadField), $oldValue));
     }
 }

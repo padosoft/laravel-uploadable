@@ -2,6 +2,8 @@
 
 namespace Padosoft\Uploadable;
 
+use Padosoft\Io\DirHelper;
+
 class UploadOptions
 {
     /**
@@ -164,7 +166,7 @@ class UploadOptions
      */
     public function setUploadBasePath(string $path): UploadOptions
     {
-        $this->uploadBasePath = $path;
+        $this->uploadBasePath = DirHelper::canonicalize($path);
 
         return $this;
     }
@@ -172,7 +174,7 @@ class UploadOptions
     /**
      * An associative array of 'attribute_name' => 'uploadBasePath'
      * set an attribute name here to override its default upload base path
-     * The path is relative to public_folder() folder.
+     * The path is absolute or relative to public_folder() folder.
      * Ex.:
      * public $uploadPaths = ['image' => 'product', 'image_thumb' => 'product/thumb'];
      * @param array $attributesPaths
@@ -180,6 +182,10 @@ class UploadOptions
      */
     public function setUploadPaths(array $attributesPaths): UploadOptions
     {
+        array_map(function ($v) {
+            return $v == '' ? $v : DirHelper::canonicalize($v);
+        }, $attributesPaths);
+
         $this->uploadPaths = $attributesPaths;
 
         return $this;
@@ -201,7 +207,6 @@ class UploadOptions
                 'image/png',
             ])
             ->setUploadBasePath(public_path('upload/'))
-            ->setUploadPaths([])
-            ;
+            ->setUploadPaths([]);
     }
 }

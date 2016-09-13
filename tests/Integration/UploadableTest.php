@@ -5,6 +5,7 @@ namespace Padosoft\Uploadable\Test\Integration;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
+use League\Flysystem\Directory;
 use Padosoft\Io\DirHelper;
 use Padosoft\Io\FileHelper;
 use Padosoft\Uploadable\UploadOptions;
@@ -59,6 +60,25 @@ class UploadableTest extends TestCase
         $model->getUploadOptionsOrDefault()->uploads = '';
         $model->guardAgainstInvalidUploadOptions();
 
+        $model->getUploadOptionsOrDefault()->uploads = 'image';
+
+        $this->expectException(InvalidOption::class);
+        $this->expectExceptionMessageRegExp('/^Could not determinate uploadBasePath/');
+        $model->getUploadOptionsOrDefault()->uploadBasePath = '';
+        $model->guardAgainstInvalidUploadOptions();
+        $this->expectException(InvalidOption::class);
+        $this->expectExceptionMessageRegExp('/^Could not determinate uploadBasePath/');
+        $model->getUploadOptionsOrDefault()->uploadBasePath = null;
+        $model->guardAgainstInvalidUploadOptions();
+    }
+
+    /**
+     * @test
+     */
+    public function guardAgainstInvalidUploadBasePathOptionsTest()
+    {
+        $model = new TestModel();
+        $model->getUploadOptionsOrDefault()->uploads = 'image';
         $this->expectException(InvalidOption::class);
         $this->expectExceptionMessageRegExp('/^Could not determinate uploadBasePath/');
         $model->getUploadOptionsOrDefault()->uploadBasePath = '';
@@ -74,6 +94,11 @@ class UploadableTest extends TestCase
      */
     public function getUploadOptionsOrDefaultTest()
     {
+        $model = new TestModelWithOutGetUploadOptions();
+        $options = $model->getUploadOptionsOrDefault();
+        $this->assertEquals(true, $options->appendModelIdSuffixInUploadedFileName);
+        $this->assertNotNull($model->getUploadOptionsOrDefault());
+
         $model = new TestModel();
         $options = $model->getUploadOptionsOrDefault();
         $this->assertEquals(true, $options->appendModelIdSuffixInUploadedFileName);
@@ -127,6 +152,18 @@ class UploadableTest extends TestCase
      */
     public function requestHasValidFilesAndCorrectPaths()
     {
+        $request = $this->getRequestAndBindItForUploadTest([]);
+        $model = new TestModel();
+        $options = $model->getUploadOptionsOrDefault();
+        $this->assertEquals(false, $model->requestHasValidFilesAndCorrectPaths());
+
+        $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt');
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
+        $model = new TestModel();
+        $options = $model->getUploadOptionsOrDefault();
+        $options->setUploadBasePath(__DIR__ . '/resources/dummy.txt');
+        $this->assertEquals(false, $model->requestHasValidFilesAndCorrectPaths());
+
         $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt');
         $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
         $model = new TestModel();
@@ -254,6 +291,12 @@ class UploadableTest extends TestCase
         $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'dummy2/'];
         $this->assertEquals(DirHelper::canonicalize(public_path('dummy2/') . $model->image),
             $model->getUploadFileFullPath('image'));
+        $model->image = '/';
+        $this->assertEquals(DirHelper::canonicalize(public_path('dummy2/') . $model->image),
+            $model->getUploadFileFullPath('image'));
+        $model->image = '';
+        $this->assertEquals(DirHelper::canonicalize(public_path('dummy2/') . $model->image),
+            $model->getUploadFileFullPath('image'));
     }
 
     /**
@@ -304,6 +347,10 @@ class UploadableTest extends TestCase
         $model->getUploadOptionsOrDefault()->uploadBasePath = public_path('dummy/');
         $this->assertEquals(URL::to('dummy/'), $model->getUploadFileBaseUrl('image'));
         $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'dummy2/'];
+        $this->assertEquals(URL::to('dummy2/'), $model->getUploadFileBaseUrl('image'));
+        $model->image = '/';
+        $this->assertEquals(URL::to('dummy2/'), $model->getUploadFileBaseUrl('image'));
+        $model->image = '';
         $this->assertEquals(URL::to('dummy2/'), $model->getUploadFileBaseUrl('image'));
     }
 
@@ -455,9 +502,14 @@ class UploadableTest extends TestCase
 
         $uploadedFile = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.txt');
         $uploadedFile2 = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.csv');
-        $options->setMimeType([mime_content_type(__DIR__ . '/resources/dummy.txt'),
-                                mime_content_type(__DIR__ . '/resources/dummy.csv')]);
-        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile, 'image_mobile' => $uploadedFile2]);
+        $options->setMimeType([
+            mime_content_type(__DIR__ . '/resources/dummy.txt'),
+            mime_content_type(__DIR__ . '/resources/dummy.csv')
+        ]);
+        $request = $this->getRequestAndBindItForUploadTest([
+            'image' => $uploadedFile,
+            'image_mobile' => $uploadedFile2
+        ]);
 
         $options->setUploadBasePath(DirHelper::njoin($this->getSysTempDirectory(), 'upload'));
         $model->name = 'dummy.txt';
@@ -465,7 +517,7 @@ class UploadableTest extends TestCase
         $model->image_mobile = 'dummy.csv';
         $model->save();
 
-        $this->assertTrue($model->id>0);
+        $this->assertTrue($model->id > 0);
         $this->assertEquals('dummy_' . $model->id . '.txt', $model->image);
         $this->assertEquals('dummy_' . $model->id . '.csv', $model->image_mobile);
         $this->assertFileExists(DirHelper::njoin($options->uploadBasePath, $model->image));
@@ -492,10 +544,61 @@ class UploadableTest extends TestCase
         $model->image = 'dummy.txt';
         $model->save();
 
-        $this->assertTrue($model->id>0);
+        $this->assertTrue($model->id > 0);
         $this->assertEquals('dummy_' . $model->id . '.txt', $model->image);
         $this->assertFileExists(DirHelper::njoin($options->uploadBasePath, $model->image));
+
+        //update model and change image
+        $model = TestModel::first();
+        $options = $model->getUploadOptionsOrDefault();
+        $uploadedFile = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.csv');
+        $options->setMimeType([mime_content_type(__DIR__ . '/resources/dummy.csv')]);
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
+        $model->name = 'dummy.csv';
+        $model->image = 'dummy.csv';
+        $model->save();
+        $this->assertTrue($model->id > 0);
+        $this->assertEquals('dummy_' . $model->id . '.csv', $model->image);
+        $this->assertFileExists(DirHelper::njoin($options->uploadBasePath, $model->image));
+        $this->assertFileNotExists(DirHelper::njoin($options->uploadBasePath, 'dummy_' . $model->id . '.txt'));
+
         @unlink(DirHelper::njoin($options->uploadBasePath, $model->image));
+        @unlink($options->uploadBasePath);
+    }
+
+    /**
+     * @test
+     */
+    public function checkIfNeedToDeleteOldFiles()
+    {
+        //copy csv to tmp dir and set image property
+        $uploadedFile = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.csv');
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
+        $this->assertFileExists(DirHelper::njoin($this->getSysTempDirectory(), 'dummy.csv'));
+        $model = new TestModel();
+        $options = $model->getUploadOptionsOrDefault();
+        $options->setUploadBasePath(DirHelper::njoin($this->getSysTempDirectory(), 'upload'));
+        $options->setMimeType([mime_content_type(__DIR__ . '/resources/dummy.txt')]);
+        $model->name = 'dummy.csv';
+        $model->image = 'dummy.csv';
+        $model->save();
+        $this->assertFileExists(DirHelper::njoin($options->uploadBasePath, $model->image));
+
+        //simulate another upload that overwrite previuous file
+        $uploadedFile = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.txt');
+        $options->setMimeType([mime_content_type(__DIR__ . '/resources/dummy.txt')]);
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
+        $model->name = 'dummy.txt';
+        $model->image = 'dummy.txt';
+        $model->save();
+        $this->assertTrue($model->id > 0);
+        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image);
+        $this->assertFileExists(DirHelper::njoin($options->uploadBasePath, $model->image));
+        $this->assertFileNotExists(DirHelper::njoin($options->uploadBasePath, 'dummy_' . $model->id . '.csv'));
+
+
+        @unlink(DirHelper::njoin($options->uploadBasePath, $model->image));
+        @unlink(DirHelper::njoin($options->uploadBasePath, 'dummy_' . $model->id . '.csv'));
         @unlink($options->uploadBasePath);
     }
 
@@ -504,6 +607,24 @@ class UploadableTest extends TestCase
      */
     public function doUploadTest()
     {
+        //UPLOAD
+        $uploadedFile = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.csv');
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
+        $this->assertFileExists(DirHelper::njoin($this->getSysTempDirectory(), 'dummy.csv'));
+        $model = new TestModel();
+        $options = $model->getUploadOptionsOrDefault();
+        $options->setUploadBasePath(DirHelper::njoin($this->getSysTempDirectory(), 'upload'));
+        $options->setMimeType([mime_content_type(__DIR__ . '/resources/dummy.csv')]);
+        $model->image = 'pippo.csv';
+        $newName = $model->doUpload($uploadedFile, 'image');
+        $this->assertTrue($newName != '');
+        $this->assertFileExists(DirHelper::njoin($options->uploadBasePath, $model->image));
+
+        $newName = $model->doUpload($uploadedFile, '');
+        $this->assertEquals('', $newName);
+
+        @unlink(DirHelper::njoin($options->uploadBasePath, $model->image));
+        @unlink($options->uploadBasePath);
     }
 
     /**
@@ -511,12 +632,55 @@ class UploadableTest extends TestCase
      */
     public function deleteUploadedFiles()
     {
-    }
+        //UPLOAD
+        $uploadedFile = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.csv');
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
+        $this->assertFileExists(DirHelper::njoin($this->getSysTempDirectory(), 'dummy.csv'));
+        $model = new TestModel();
+        $options = $model->getUploadOptionsOrDefault();
+        $options->setUploadBasePath(DirHelper::njoin($this->getSysTempDirectory(), 'upload'));
+        $options->setMimeType([mime_content_type(__DIR__ . '/resources/dummy.csv')]);
+        $model->name = 'dummy.csv';
+        $model->image = 'dummy.csv';
+        $model->save();
+        $this->assertTrue($model->id > 0);
+        $this->assertFileExists(DirHelper::njoin($options->uploadBasePath, $model->image));
 
-    /**
-     * @test
-     */
-    public function deleteUploadedFile()
-    {
+        //RETRIVE AND DELETE
+        $model = TestModel::first();
+        $options = $model->getUploadOptionsOrDefault();
+        $options->setUploadBasePath(DirHelper::njoin($this->getSysTempDirectory(), 'upload'));
+        $oldImage = $model->image;
+        $model->delete();
+        $this->assertFileNotExists(DirHelper::njoin($options->uploadBasePath, $oldImage));
+
+        //UPLOAD
+        $uploadedFile = $this->getUploadedFileForTestAndCopyInSysTempDir(__DIR__ . '/resources/dummy.csv');
+        $request = $this->getRequestAndBindItForUploadTest(['image' => $uploadedFile]);
+        $this->assertFileExists(DirHelper::njoin($this->getSysTempDirectory(), 'dummy.csv'));
+        $model = new TestModel();
+        $options = $model->getUploadOptionsOrDefault();
+        $options->setUploadBasePath(DirHelper::njoin($this->getSysTempDirectory(), 'upload'));
+        $options->setMimeType([mime_content_type(__DIR__ . '/resources/dummy.csv')]);
+        $model->name = 'dummy.csv';
+        $model->image = 'dummy.csv';
+        $model->save();
+        $this->assertTrue($model->id > 0);
+        $this->assertFileExists(DirHelper::njoin($options->uploadBasePath, $model->image));
+
+        //RETRIVE SET ATTRIB TO BLANK AND DELETE
+        $model = TestModel::first();
+        $this->assertTrue($model->id > 0);
+        $options = $model->getUploadOptionsOrDefault();
+        $options->setUploadBasePath(DirHelper::njoin($this->getSysTempDirectory(), 'upload'));
+        //set to empty image attribute!
+        $oldImage = $model->image;
+        $model->image = '';
+        $model->delete();
+        $this->assertFileNotExists(DirHelper::njoin($options->uploadBasePath, $oldImage));
+
+        @unlink(DirHelper::njoin($options->uploadBasePath, $model->image));
+        @unlink(DirHelper::njoin($options->uploadBasePath, 'dummy_' . $model->id . '.csv'));
+        @unlink($options->uploadBasePath);
     }
 }
