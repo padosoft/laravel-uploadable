@@ -23,6 +23,27 @@ trait Uploadable
     protected $uploadOptions;
 
     /**
+     * Determine if the model or given attribute(s) have been modified.
+     * Implemented in \Illuminate\Database\Eloquent\Model
+     *
+     * @param array|string|null $attributes = null
+     *
+     * @return bool
+     */
+    abstract public function isDirty($attributes = null);
+
+    /**
+     * Get the model's original attribute values.
+     * Implemented in \Illuminate\Database\Eloquent\Model
+     *
+     * @param string|null $key = null
+     * @param mixed $default = null
+     *
+     * @return mixed|array
+     */
+    abstract public function getOriginal($key = null, $default = null);
+
+    /**
      * Boot the trait.
      */
     public static function bootUploadable()
@@ -223,9 +244,6 @@ trait Uploadable
      */
     public function generateNewUploadFileName(UploadedFile $uploadedFile) : string
     {
-        if (!$uploadedFile) {
-            return '';
-        }
         if (!$this->id && $this->getUploadOptionsOrDefault()->appendModelIdSuffixInUploadedFileName) {
             return '';
         }
@@ -409,20 +427,32 @@ trait Uploadable
      */
     public function getUploadFileBasePathSpecific(string $uploadField) : string
     {
-        //check if there is a specified upload path
-        if (empty($this->getUploadOptionsOrDefault()->uploadPaths) || count($this->getUploadOptionsOrDefault()->uploadPaths) < 1
-            || !array_key_exists($uploadField, $this->getUploadOptionsOrDefault()->uploadPaths)
-        ) {
+        //check if there is a specified upload path for this field
+        if (!$this->hasUploadPathSpecifiedForThisField($uploadField)) {
             return '';
         }
 
         $path = $this->getUploadOptionsOrDefault()->uploadPaths[$uploadField];
 
+        //if path is relative, adjust it by public puth.
         if (DirHelper::isRelative($path)) {
             $path = public_path($path);
         }
 
         return DirHelper::canonicalize($path);
+    }
+
+    /**
+     * Check if there is a specified upload path setted for this field
+     * @param string $uploadField
+     * @return bool
+     */
+    public function hasUploadPathSpecifiedForThisField(string $uploadField) : bool
+    {
+        return !(empty($this->getUploadOptionsOrDefault()->uploadPaths)
+            || count($this->getUploadOptionsOrDefault()->uploadPaths) < 1
+            || !array_key_exists($uploadField, $this->getUploadOptionsOrDefault()->uploadPaths)
+        );
     }
 
     /**
