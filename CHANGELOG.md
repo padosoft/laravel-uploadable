@@ -2,6 +2,11 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
+## 2.0.1 - 2017-01-07
+
+- update swiftmailer/swiftmailer to fix Remote Code Execution vulnerability in v5.4.1
+- exclude composer.lock from .gitignore
+
 ## 2.0.0 - 2016-09-13
 
 - Big refactor
