@@ -629,6 +629,7 @@ trait Uploadable
         if (isNullOrEmpty($uploadField)
             || !$this->isDirty($uploadField)
             || ($this->{$uploadField} == $this->getOriginal($uploadField))
+            || isNullOrEmpty($this->getOriginal($uploadField))
         ) {
             return;
         }

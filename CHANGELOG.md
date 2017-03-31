@@ -2,6 +2,12 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
+## 2.0.2 - 2017-03-31
+
+- FIX in checkIfNeedToDeleteOldFile() $oldValue variable is null.
+Thanks to danielec.
+See: https://github.com/padosoft/laravel-uploadable/issues/3
+
 ## 2.0.1 - 2017-01-07
 
 - update swiftmailer/swiftmailer to fix Remote Code Execution vulnerability in v5.4.1
