@@ -2,6 +2,11 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
+## 3.0.0 - 2018-10-28
+### ADD
+- Update to laravel 5.7
+- Update composer.json.
+
 ## 2.0.2 - 2017-03-31
 
 - FIX in checkIfNeedToDeleteOldFile() $oldValue variable is null.
