@@ -2,6 +2,10 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
+## 3.0.2 - 2018-10-28
+### CHANGE
+- readme.md
+
 ## 3.0.1 - 2018-10-28
 ### FIX
 - Travis

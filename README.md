@@ -12,12 +12,12 @@ This package provides a trait that will automatic handlind upload when saving/up
 ##Requires
   
 - php: >=7.0.0
-- illuminate/database: ^5.0
-- illuminate/support: ^5.0
-- illuminate/http: ^5.0
-- padosoft/laravel-request: ^1.0
+- illuminate/database: ^5.7
+- illuminate/support: ^5.7
+- illuminate/http: ^5.7
+- padosoft/laravel-request: ^2.0
 - padosoft/io: ^1.0
-- padosoft/support: ^1.0
+- padosoft/support: ^2.0
   
 ## Installation
 
