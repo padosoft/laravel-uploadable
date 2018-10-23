@@ -2,6 +2,10 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
+## 3.0.1 - 2018-10-28
+### FIX
+- Travis
+
 ## 3.0.0 - 2018-10-28
 ### ADD
 - Update to laravel 5.7
