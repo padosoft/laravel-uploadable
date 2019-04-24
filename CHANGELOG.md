@@ -2,6 +2,12 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
+## 3.1.0 - 2019-04-24
+### ADD
+- Events for upload and delete upload successfull.
+- Back compatibility to laravel 5.0 in composer.json.
+
+
 ## 3.0.2 - 2018-10-28
 ### CHANGE
 - readme.md

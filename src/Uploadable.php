@@ -11,6 +11,7 @@ use Padosoft\Io\DirHelper;
 use Padosoft\Io\FileHelper;
 use Padosoft\Laravel\Request\RequestHelper;
 use Padosoft\Laravel\Request\UploadedFileHelper;
+use Padosoft\Uploadable\Events\UploadDeleteExecuted;
 
 /**
  * Class Uploadable
@@ -323,11 +324,16 @@ trait Uploadable
             return;
         }
 
+        //old value
+        $old = $this->{$uploadField};
+
         //set to black attribute
         $this->{$uploadField} = '';
 
         //save on db (not call model save because invoke event and entering in loop)
         $this->updateDb($uploadField, '');
+
+        event(new UploadDeleteExecuted($uploadField, $old, $this));
     }
 
     /**
