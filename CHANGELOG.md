@@ -2,6 +2,10 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
+## 3.1.1 - 2019-04-24
+### FIX
+- forget to fire Event for upload successfull.
+
 ## 3.1.0 - 2019-04-24
 ### ADD
 - Events for upload and delete upload successfull.

@@ -12,6 +12,7 @@ use Padosoft\Io\FileHelper;
 use Padosoft\Laravel\Request\RequestHelper;
 use Padosoft\Laravel\Request\UploadedFileHelper;
 use Padosoft\Uploadable\Events\UploadDeleteExecuted;
+use Padosoft\Uploadable\Events\UploadExecuted;
 
 /**
  * Class Uploadable
@@ -182,6 +183,8 @@ trait Uploadable
 
         //save on db (not call model save because invoke event and entering in loop)
         $this->updateDb($uploadField, $newName);
+
+        event(new UploadExecuted($uploadField, $this));
     }
 
     /**
