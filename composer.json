@@ -16,19 +16,19 @@
         }
     ],
     "require": {
-        "php" : ">=7.0.0",
-        "illuminate/http": "^5.0|^5.7",
-        "illuminate/database": "^5.0|^5.7",
-        "illuminate/support": "^5.0|^5.7",
+        "php" : ">=7.1.0",
+        "illuminate/http": "^5.7|^5.8",
+        "illuminate/database": "^5.7|^5.8",
+        "illuminate/support": "^5.7|^5.8",
         "padosoft/io": "^1.0",
-        "padosoft/laravel-request": "^1.0|^2.0",
+        "padosoft/laravel-request": "^2.0|^3.0",
         "padosoft/support": "^1.6|^2.1"
     },
     "require-dev": {
-        "orchestra/testbench": "^3.2|^3.7",
-        "phpunit/phpunit": "^5.0|^7.0",
-        "mockery/mockery": "^0.9.5",
-        "padosoft/test": "^0.2.2|^1.0.1"
+        "orchestra/testbench": "^3.7|^3.8",
+        "phpunit/phpunit": "^7.0|^8.0",
+        "mockery/mockery": "^1.0",
+        "padosoft/test": "^1.0.1"
     },
     "autoload": {
         "psr-4": {

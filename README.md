@@ -11,13 +11,13 @@ This package provides a trait that will automatic handlind upload when saving/up
 
 ##Requires
   
-- php: >=7.0.0
-- illuminate/database: ^5.7
-- illuminate/support: ^5.7
-- illuminate/http: ^5.7
-- padosoft/laravel-request: ^2.0
-- padosoft/io: ^1.0
-- padosoft/support: ^2.0
+"php" : ">=7.1.0",
+"padosoft/support": "^1.6|^2.1"
+"padosoft/io": "^1.0",
+"illuminate/http": "^5.7|^5.8",
+"illuminate/database": "^5.7|^5.8",
+"illuminate/support": "^5.7|^5.8",
+"padosoft/laravel-request": "^2.0|^3.0",
   
 ## Installation
 
@@ -126,6 +126,17 @@ public function generateNewUploadFileName(\Illuminate\Http\UploadedFile $uploade
     }
 }
 ```
+
+This class use Laravel 'local' Storage Disk for default.
+You can set different disk in your model:
+```php
+public function getUploadOptions() : UploadOptions
+{
+    return UploadOptions::create()
+        ->setStorageDisk('ftp');
+}
+```
+
 
 For all options see UploadOptions class.
 

@@ -20,7 +20,7 @@ abstract class TestCase extends Orchestra
      */
     protected $testModel;
 
-    public function setUp()
+    public function setUp() : void
     {
         parent::setUp();
 
@@ -30,7 +30,7 @@ abstract class TestCase extends Orchestra
         $this->initFileAndPath(__DIR__);
     }
 
-    protected function tearDown()
+    protected function tearDown() : void
     {
         //remove created path during test
         $this->removeCreatedPathDuringTest(__DIR__);

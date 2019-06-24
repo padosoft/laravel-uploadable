@@ -2,6 +2,7 @@
 
 namespace Padosoft\Uploadable;
 
+use Illuminate\Support\Facades\Storage;
 use Padosoft\Io\DirHelper;
 
 class UploadOptions
@@ -54,21 +55,34 @@ class UploadOptions
     ];
 
     /**
-     * upload base path.
-     * default: public/model->table
+     * upload base path relative to $storageDiskName root folder
      * @var string
      */
     public $uploadBasePath;
 
     /**
+     * The default storage disk name
+     * used for default upload base path
+     * default: public
+     * @var string
+     */
+    public $storageDiskName = 'local';
+
+    /**
      * An associative array of 'attribute_name' => 'uploadBasePath'
      * set an attribute name here to override its default upload base path
-     * The path is relative to public_folder() folder.
+     * The path is relative to $storageDiskName root folder.
      * Ex.:
      * public $uploadPaths = ['image' => 'product', 'image_thumb' => 'product/thumb'];
      * @var array
      */
     public $uploadPaths = [];
+
+    /**
+     * The laravel storage disk to store uploaded files
+     * @var \Illuminate\Filesystem\FilesystemAdapter
+     */
+    public $storage;
 
 
     /**
@@ -192,6 +206,27 @@ class UploadOptions
     }
 
     /**
+     * Set a Storage Disk name
+     * @param string $diskName
+     * @return UploadOptions
+     */
+    public function setStorageDisk(string $diskName)
+    {
+        $this->storage = Storage::disk($diskName);
+
+        return $this;
+    }
+
+    /**
+     * Get a Storage Disk
+     * @return \Illuminate\Filesystem\FilesystemAdapter
+     */
+    public function getStorage() : \Illuminate\Filesystem\FilesystemAdapter
+    {
+        return $this->storage;
+    }
+
+    /**
      * Get the options for generating the upload.
      */
     public function getUploadOptionsDefault(): UploadOptions
@@ -206,7 +241,8 @@ class UploadOptions
                 'image/jpeg',
                 'image/png',
             ])
-            ->setUploadBasePath(public_path('upload/'))
-            ->setUploadPaths([]);
+            ->setUploadBasePath( 'upload/')
+            ->setUploadPaths([])
+            ->setStorageDisk('');
     }
 }
