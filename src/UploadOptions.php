@@ -3,7 +3,6 @@
 namespace Padosoft\Uploadable;
 
 use Illuminate\Support\Facades\Storage;
-use Padosoft\Io\DirHelper;
 
 class UploadOptions
 {
@@ -66,7 +65,7 @@ class UploadOptions
      * default: public
      * @var string
      */
-    public $storageDiskName = 'local';
+    public $storageDiskName = 'public';
 
     /**
      * An associative array of 'attribute_name' => 'uploadBasePath'
@@ -173,14 +172,14 @@ class UploadOptions
     }
 
     /**
-     * upload base path.
+     * upload base path. path relative to $storageDiskName root folder
      * Ex.: public/upload/news
      * @param string $path
      * @return UploadOptions
      */
     public function setUploadBasePath(string $path): UploadOptions
     {
-        $this->uploadBasePath = DirHelper::canonicalize($path);
+        $this->uploadBasePath = canonicalize($path);
 
         return $this;
     }
@@ -188,7 +187,7 @@ class UploadOptions
     /**
      * An associative array of 'attribute_name' => 'uploadBasePath'
      * set an attribute name here to override its default upload base path
-     * The path is absolute or relative to public_folder() folder.
+     * The path is relative to $storageDiskName root folder.
      * Ex.:
      * public $uploadPaths = ['image' => 'product', 'image_thumb' => 'product/thumb'];
      * @param array $attributesPaths
@@ -197,7 +196,7 @@ class UploadOptions
     public function setUploadPaths(array $attributesPaths): UploadOptions
     {
         array_map(function ($v) {
-            return $v == '' ? $v : DirHelper::canonicalize($v);
+            return $v == '' ? $v : canonicalize($v);
         }, $attributesPaths);
 
         $this->uploadPaths = $attributesPaths;
@@ -243,6 +242,6 @@ class UploadOptions
             ])
             ->setUploadBasePath( 'upload/')
             ->setUploadPaths([])
-            ->setStorageDisk('');
+            ->setStorageDisk('public');
     }
 }

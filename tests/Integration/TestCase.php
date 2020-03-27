@@ -8,7 +8,6 @@ use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Padosoft\Test\traits\ExceptionTestable;
 use Padosoft\Test\traits\FileSystemTestable;
-use Padosoft\Laravel\Request\UploadedFileTestable;
 
 
 abstract class TestCase extends Orchestra

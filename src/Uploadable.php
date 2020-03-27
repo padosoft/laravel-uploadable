@@ -8,10 +8,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
-use Padosoft\Io\DirHelper;
-use Padosoft\Io\FileHelper;
-use Padosoft\Laravel\Request\RequestHelper;
-use Padosoft\Laravel\Request\UploadedFileHelper;
 use Padosoft\Uploadable\Events\UploadDeleteExecuted;
 use Padosoft\Uploadable\Events\UploadExecuted;
 
@@ -133,7 +129,7 @@ trait Uploadable
      */
     public function guardAgainstInvalidUploadOptions()
     {
-        if (!count($this->uploadOptions->uploads)) {
+        if (!is_array($this->uploadOptions->uploads) || count($this->uploadOptions->uploads)<1) {
             throw InvalidOption::missingUploadFields();
         }
         if ($this->uploadOptions->uploadBasePath === null || $this->uploadOptions->uploadBasePath == '') {
@@ -153,6 +149,7 @@ trait Uploadable
 
         //loop for every upload model attributes and do upload if has a file in request
         foreach ($this->getUploadsAttributesSafe() as $uploadField) {
+
             $this->uploadFile($uploadField);
         }
     }
@@ -164,14 +161,14 @@ trait Uploadable
     public function uploadFile(string $uploadField)
     {
         //check if there is a valid file in request for current attribute
-        if (!RequestHelper::isValidCurrentRequestUploadFile($uploadField,
+        if (!isValidCurrentRequestUploadFile($uploadField,
             $this->getUploadOptionsOrDefault()->uploadsMimeType)
         ) {
             return;
         }
 
         //retrive the uploaded file
-        $uploadedFile = RequestHelper::getCurrentRequestFileSafe($uploadField);
+        $uploadedFile = getCurrentRequestFileSafe($uploadField);
         if ($uploadedFile === null) {
             return;
         }
@@ -208,7 +205,7 @@ trait Uploadable
         $pathToStore = $this->getUploadFileBasePath($uploadAttribute);
 
         //delete if file already exists
-        $newFile = DirHelper::njoin($pathToStore, $newName);
+        $newFile = njoin($pathToStore, $newName);
         if($this->getUploadOptionsOrDefault()->storage->exists($newFile)){
             $this->getUploadOptionsOrDefault()->storage->delete($newFile);
         }
@@ -235,7 +232,7 @@ trait Uploadable
     public function requestHasValidFilesAndCorrectPaths() : bool
     {
         //current request has not uploaded files
-        if (!RequestHelper::currentRequestHasFiles()) {
+        if (!currentRequestHasFiles()) {
             return false;
         }
 
@@ -282,7 +279,7 @@ trait Uploadable
         }
 
         //retrive original file name and extension
-        $filenameWithoutExtension = UploadedFileHelper::getFilenameWithoutExtension($uploadedFile);
+        $filenameWithoutExtension = getUploadedFilenameWithoutExtension($uploadedFile);
         $ext = $uploadedFile->getClientOriginalExtension();
 
         $newName = $filenameWithoutExtension . $this->getUploadOptionsOrDefault()->uploadFileNameSuffixSeparator . $this->id . '.' . $ext;
@@ -318,7 +315,7 @@ trait Uploadable
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
 
         //unlink file
-        $path = DirHelper::njoin($uploadFieldPath, $this->{$uploadField});
+        $path = njoin($uploadFieldPath, $this->{$uploadField});
         if(!$this->getUploadOptionsOrDefault()->storage->delete($path)){
             Log::error('Error when Uploadable.deleteUploadedFile() try to delete file:'.$path);
         }
@@ -425,7 +422,7 @@ trait Uploadable
     public function getUploadFileBasePath(string $uploadField) : string
     {
         //default model upload path
-        $uploadFieldPath = DirHelper::canonicalize($this->getUploadOptionsOrDefault()->uploadBasePath);
+        $uploadFieldPath = canonicalize($this->getUploadOptionsOrDefault()->uploadBasePath);
 
         //overwrite if there is specific path for the field
         $specificPath = $this->getUploadFileBasePathSpecific($uploadField);
@@ -464,7 +461,7 @@ trait Uploadable
 
         //if path is relative, nothing to do because all is relative to storage disk root path
 
-        return DirHelper::canonicalize($path);
+        return canonicalize($path);
     }
 
     /**
@@ -492,7 +489,7 @@ trait Uploadable
     ) : string
     {
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
-        $uploadFieldPath = DirHelper::canonicalize(DirHelper::addFinalSlash($uploadFieldPath) . $this->{$uploadField});
+        $uploadFieldPath = canonicalize($this->getUploadOptionsOrDefault()->storage->path(addFinalSlash($uploadFieldPath) . $this->{$uploadField}));
 
         if ($this->isSlashOrEmptyDir($uploadFieldPath)) {
             return '';
@@ -513,7 +510,7 @@ trait Uploadable
         string $uploadField
     ) : string
     {
-        $url = $this->getUploadFileFullPath($uploadField);
+        $url = addFinalSlash($this->getUploadFileBasePath($uploadField)).  $this->{$uploadField};
 
         return $url == '' ? '' : $this->getUploadOptionsOrDefault()->storage->url($url);
     }
@@ -531,7 +528,7 @@ trait Uploadable
         if ($path == '') {
             return '';
         }
-        $len = strpos($path, '/');
+        $len = strpos($path, DIRECTORY_SEPARATOR);
         if ($len === false) {
             return '';
         }
@@ -556,14 +553,14 @@ trait Uploadable
     ) : string
     {
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
-
-        $uploadFieldPath = DirHelper::canonicalize(DirHelper::addFinalSlash($this->removePublicPath($uploadFieldPath)));
+        /*dump($uploadFieldPath);
+        $uploadFieldPath = canonicalize(addFinalSlash($this->removePublicPath($uploadFieldPath)));*/
 
         if ($this->isSlashOrEmptyDir($uploadFieldPath)) {
             return '';
         }
 
-        return $this->getUploadOptionsOrDefault()->storage->url($uploadFieldPath);
+        return addFinalSlash($this->getUploadOptionsOrDefault()->storage->url($uploadFieldPath));
     }
 
     /**
@@ -590,7 +587,7 @@ trait Uploadable
         }
 
         //generate new file name
-        $uploadedFile = RequestHelper::getCurrentRequestFileSafe($uploadField);
+        $uploadedFile = getCurrentRequestFileSafe($uploadField);
         if ($uploadedFile === null) {
             return;
         }
@@ -663,6 +660,6 @@ trait Uploadable
 
         $oldValue = $this->getOriginal($uploadField);
 
-        $this->getUploadOptionsOrDefault()->storage->delete(DirHelper::njoin($this->getUploadFileBasePath($uploadField), $oldValue));
+        $this->getUploadOptionsOrDefault()->storage->delete(njoin($this->getUploadFileBasePath($uploadField), $oldValue));
     }
 }

@@ -3,7 +3,6 @@
 namespace Padosoft\Uploadable\Test\Integration;
 
 use Orchestra\Testbench\TestCase as Orchestra;
-use Padosoft\Io\DirHelper;
 use Padosoft\Uploadable\UploadOptions;
 
 class UploadOptionsTest extends Orchestra
@@ -13,7 +12,8 @@ class UploadOptionsTest extends Orchestra
     {
         $obj = UploadOptions::create()->getUploadOptionsDefault();
         $this->assertEquals(true, $obj->appendModelIdSuffixInUploadedFileName);
-        $this->assertEquals(DirHelper::canonicalize(public_path('upload/')), $obj->uploadBasePath);
+        $this->assertEquals('upload', $obj->uploadBasePath);
+        $this->assertEquals(canonicalize(storage_path('app/public/upload/')), canonicalize($obj->storage->path($obj->uploadBasePath)));
         $this->assertEquals('0755', $obj->uploadCreateDirModeMask);
         $this->assertEquals('_', $obj->uploadFileNameSuffixSeparator);
         $this->assertEquals([], $obj->uploadPaths);
@@ -34,7 +34,7 @@ class UploadOptionsTest extends Orchestra
             ->setMimeType(['image/bmp','text/plain'])
         ;
         $this->assertEquals(false, $obj->appendModelIdSuffixInUploadedFileName);
-        $this->assertEquals(DirHelper::canonicalize(public_path('upload2')), $obj->uploadBasePath);
+        $this->assertEquals(canonicalize(public_path('upload2')), $obj->uploadBasePath);
         $this->assertEquals('0777', $obj->uploadCreateDirModeMask);
         $this->assertEquals('-', $obj->uploadFileNameSuffixSeparator);
         $this->assertEquals(['image2' => public_path('upload').'/image2', 'image_mobile2' => public_path('upload').'/image_mobile2'], $obj->uploadPaths);
