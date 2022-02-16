@@ -212,6 +212,7 @@ class UploadOptions
     public function setStorageDisk(string $diskName)
     {
         $this->storage = Storage::disk($diskName);
+        $this->storageDiskName=$diskName;
 
         return $this;
     }
