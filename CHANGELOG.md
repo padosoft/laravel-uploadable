@@ -2,10 +2,18 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
-## 4.1.0 - 2022-04-05
+# 4.2.0 - 2022-04-05
 ### CHANGE
 - update package to laravel 9.
 - update composer deps.
+
+## 4.1.1 - 2022-02-16
+### FIX
+- Fix issue with setStorageDisk
+
+## 4.1.0 - 2021-10-30
+### CHANGE
+- added support for laravel 8
 
 ## 4.0.0 - 2019-06-24
 ### ADD
