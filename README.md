@@ -126,6 +126,17 @@ public function generateNewUploadFileName(\Illuminate\Http\UploadedFile $uploade
 }
 ```
 
+This class use Laravel 'local' Storage Disk for default.
+You can set different disk in your model:
+```php
+public function getUploadOptions() : UploadOptions
+{
+    return UploadOptions::create()
+        ->setStorageDisk('ftp');
+}
+```
+
+
 For all options see UploadOptions class.
 
 ## Change log

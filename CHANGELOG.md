@@ -2,11 +2,16 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
-## 3.2.0 - 2022-04-05
+## 4.1.0 - 2022-04-05
 ### CHANGE
 - update package to laravel 9.
 - update composer deps.
-- 
+
+## 4.0.0 - 2019-06-24
+### ADD
+- support for Laravel 5.8 and php min vers are now >=7.1.x.
+- support for Laravel File Storage (upload doesn't depend on public_path() anymore).
+
 ## 3.1.1 - 2019-04-24
 ### FIX
 - forget to fire Event for upload successfull.

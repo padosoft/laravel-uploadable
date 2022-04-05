@@ -2,7 +2,7 @@
 
 namespace Padosoft\Uploadable;
 
-use Padosoft\Io\DirHelper;
+use Illuminate\Support\Facades\Storage;
 
 class UploadOptions
 {
@@ -54,21 +54,34 @@ class UploadOptions
     ];
 
     /**
-     * upload base path.
-     * default: public/model->table
+     * upload base path relative to $storageDiskName root folder
      * @var string
      */
     public $uploadBasePath;
 
     /**
+     * The default storage disk name
+     * used for default upload base path
+     * default: public
+     * @var string
+     */
+    public $storageDiskName = 'public';
+
+    /**
      * An associative array of 'attribute_name' => 'uploadBasePath'
      * set an attribute name here to override its default upload base path
-     * The path is relative to public_folder() folder.
+     * The path is relative to $storageDiskName root folder.
      * Ex.:
      * public $uploadPaths = ['image' => 'product', 'image_thumb' => 'product/thumb'];
      * @var array
      */
     public $uploadPaths = [];
+
+    /**
+     * The laravel storage disk to store uploaded files
+     * @var \Illuminate\Filesystem\FilesystemAdapter
+     */
+    public $storage;
 
 
     /**
@@ -159,14 +172,14 @@ class UploadOptions
     }
 
     /**
-     * upload base path.
+     * upload base path. path relative to $storageDiskName root folder
      * Ex.: public/upload/news
      * @param string $path
      * @return UploadOptions
      */
     public function setUploadBasePath(string $path): UploadOptions
     {
-        $this->uploadBasePath = DirHelper::canonicalize($path);
+        $this->uploadBasePath = canonicalize($path);
 
         return $this;
     }
@@ -174,7 +187,7 @@ class UploadOptions
     /**
      * An associative array of 'attribute_name' => 'uploadBasePath'
      * set an attribute name here to override its default upload base path
-     * The path is absolute or relative to public_folder() folder.
+     * The path is relative to $storageDiskName root folder.
      * Ex.:
      * public $uploadPaths = ['image' => 'product', 'image_thumb' => 'product/thumb'];
      * @param array $attributesPaths
@@ -183,12 +196,34 @@ class UploadOptions
     public function setUploadPaths(array $attributesPaths): UploadOptions
     {
         array_map(function ($v) {
-            return $v == '' ? $v : DirHelper::canonicalize($v);
+            return $v == '' ? $v : canonicalize($v);
         }, $attributesPaths);
 
         $this->uploadPaths = $attributesPaths;
 
         return $this;
+    }
+
+    /**
+     * Set a Storage Disk name
+     * @param string $diskName
+     * @return UploadOptions
+     */
+    public function setStorageDisk(string $diskName)
+    {
+        $this->storage = Storage::disk($diskName);
+        $this->storageDiskName=$diskName;
+
+        return $this;
+    }
+
+    /**
+     * Get a Storage Disk
+     * @return \Illuminate\Filesystem\FilesystemAdapter
+     */
+    public function getStorage() : \Illuminate\Filesystem\FilesystemAdapter
+    {
+        return $this->storage;
     }
 
     /**
@@ -206,7 +241,8 @@ class UploadOptions
                 'image/jpeg',
                 'image/png',
             ])
-            ->setUploadBasePath(public_path('upload/'))
-            ->setUploadPaths([]);
+            ->setUploadBasePath( 'upload/')
+            ->setUploadPaths([])
+            ->setStorageDisk('public');
     }
 }

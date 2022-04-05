@@ -27,7 +27,7 @@ class TestModel extends Model
         }
 
         $this->uploadOptions = UploadOptions::create()->getUploadOptionsDefault()
-            ->setUploadBasePath(public_path('upload/' . $this->getTable()))
+            ->setUploadBasePath('upload/' . $this->getTable())
             ->setUploadsAttributes(['image', 'image_mobile']);
 
         return $this->uploadOptions;
