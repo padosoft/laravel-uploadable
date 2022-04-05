@@ -5,20 +5,19 @@
 [![Build Status](https://img.shields.io/travis/padosoft/laravel-uploadable/master.svg?style=flat-square)](https://travis-ci.org/padosoft/laravel-uploadable)
 [![Quality Score](https://img.shields.io/scrutinizer/g/padosoft/laravel-uploadable.svg?style=flat-square)](https://scrutinizer-ci.com/g/padosoft/laravel-uploadable)
 [![Total Downloads](https://img.shields.io/packagist/dt/padosoft/laravel-uploadable.svg?style=flat-square)](https://packagist.org/packages/padosoft/laravel-uploadable)
-[![SensioLabsInsight](https://img.shields.io/sensiolabs/i/4570b2c7-71c6-4b11-9214-da078fb51a98.svg?style=flat-square)](https://insight.sensiolabs.com/projects/4570b2c7-71c6-4b11-9214-da078fb51a98)
 
 This package provides a trait that will automatic handlind upload when saving/updating/deleting any Eloquent model with upload form request.
 
 ##Requires
   
-- php: >=7.0.0
-- illuminate/database: ^5.7
-- illuminate/support: ^5.7
-- illuminate/http: ^5.7
-- padosoft/laravel-request: ^2.0
-- padosoft/io: ^1.0
-- padosoft/support: ^2.0
-  
+- php: >=7.1
+- illuminate/database: ^5.7|^6.0|^7.0|^8.0|^9.0
+- illuminate/support: ^5.7|^6.0|^7.0|^8.0|^9.0
+- illuminate/http: ^5.7|^6.0|^7.0|^8.0|^9.0
+- padosoft/io: "^1.9",
+- padosoft/laravel-request: "^1.0|^2.0",
+- padosoft/support: "^1.6|^2.1|^3.0.4"
+- 
 ## Installation
 
 You can install the package via composer:

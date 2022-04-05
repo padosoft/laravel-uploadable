@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<analysis>
+  <link href="https://insight.sensiolabs.com/api/projects/4570b2c7-71c6-4b11-9214-da078fb51a98/analyses/33" rel="self" type="application/vnd.com.sensiolabs.insight+xml"/>
+  <link href="https://insight.sensiolabs.com/api/projects/4570b2c7-71c6-4b11-9214-da078fb51a98/analyses/33/status" rel="status" type="application/vnd.com.sensiolabs.insight+xml"/>
+  <link href="https://insight.sensiolabs.com/api/projects/4570b2c7-71c6-4b11-9214-da078fb51a98" rel="project" type="application/vnd.com.sensiolabs.insight+xml"/>
+  <link href="https://insight.sensiolabs.com/projects/4570b2c7-71c6-4b11-9214-da078fb51a98/analyses/33" rel="self" type="text/html"/>
+  <status><![CDATA[]]></status>
+  <grades>
+    <entry><![CDATA[none]]></entry>
+    <entry><![CDATA[bronze]]></entry>
+    <entry><![CDATA[silver]]></entry>
+    <entry><![CDATA[gold]]></entry>
+    <entry><![CDATA[platinum]]></entry>
+  </grades>
+  <failed>false</failed>
+  <grade><![CDATA[platinum]]></grade>
+  <begin-at><![CDATA[2017-09-16T17:00:07+0200]]></begin-at>
+  <end-at><![CDATA[2017-09-16T17:01:50+0200]]></end-at>
+  <duration>7</duration>
+  <number>33</number>
+  <altered>false</altered>
+  <remediation-cost>0</remediation-cost>
+  <nb-violations>0</nb-violations>
+  <reference><![CDATA[d4f1ddd0b4c7989a02df051a9bb110889b1a8936]]></reference>
+  <configuration>
+    <ignored-branches>
+      <branch><![CDATA[gh-pages]]></branch>
+    </ignored-branches>
+    <pre-composer-script/>
+    <post-composer-script/>
+    <working-directory/>
+    <php-version/>
+    <php-ini/>
+    <commit-failure-conditions>
+      <branch><![CDATA[project.severity.critical > 0]]></branch>
+      <branch><![CDATA[project.severity.major > 0]]></branch>
+    </commit-failure-conditions>
+    <global-excluded-dirs>
+      <dir><![CDATA[vendor]]></dir>
+      <dir><![CDATA[vendors]]></dir>
+      <dir><![CDATA[test]]></dir>
+      <dir><![CDATA[tests]]></dir>
+      <dir><![CDATA[Tests]]></dir>
+      <dir><![CDATA[spec]]></dir>
+      <dir><![CDATA[features]]></dir>
+      <dir><![CDATA[Fixtures]]></dir>
+      <dir><![CDATA[DataFixtures]]></dir>
+      <dir><![CDATA[var]]></dir>
+    </global-excluded-dirs>
+    <excluded-patterns>
+      <pattern><![CDATA[app/check.php]]></pattern>
+      <pattern><![CDATA[app/SymfonyRequirements.php]]></pattern>
+      <pattern><![CDATA[public/index.php]]></pattern>
+      <pattern><![CDATA[web/config.php]]></pattern>
+      <pattern><![CDATA[web/app_*.php]]></pattern>
+      <pattern><![CDATA[config/bootstrap.php]]></pattern>
+    </excluded-patterns>
+    <patterns>
+      <file>
+        <pattern><![CDATA[*.php]]></pattern>
+        <pattern><![CDATA[*.twig]]></pattern>
+        <pattern><![CDATA[*.xml]]></pattern>
+        <pattern><![CDATA[*.yml]]></pattern>
+        <pattern><![CDATA[*.yaml]]></pattern>
+        <pattern><![CDATA[*.ini]]></pattern>
+        <pattern><![CDATA[*.dist]]></pattern>
+        <pattern><![CDATA[*.sql]]></pattern>
+        <pattern><![CDATA[*.md]]></pattern>
+        <pattern><![CDATA[*.rst]]></pattern>
+        <pattern><![CDATA[composer.*]]></pattern>
+        <pattern><![CDATA[.gitignore]]></pattern>
+        <pattern><![CDATA[LICENSE]]></pattern>
+        <pattern><![CDATA[README]]></pattern>
+        <pattern><![CDATA[Makefile]]></pattern>
+        <pattern><![CDATA[.htaccess]]></pattern>
+      </file>
+      <php>
+        <pattern><![CDATA[*.php]]></pattern>
+      </php>
+      <twig>
+        <pattern><![CDATA[*.twig]]></pattern>
+      </twig>
+    </patterns>
+    <rules>
+      <rule name="symfony.use_dir_file_constant" enabled="false"/>
+    </rules>
+    <parameters>
+      <parameter name="project_type">1</parameter>
+    </parameters>
+    <env/>
+    <notifications/>
+  </configuration>
+  <previous-analyses-references>
+    <analysis-reference number="33">d4f1ddd0b4c7989a02df051a9bb110889b1a8936</analysis-reference>
+    <analysis-reference number="32">d4f1ddd0b4c7989a02df051a9bb110889b1a8936</analysis-reference>
+    <analysis-reference number="31">d4f1ddd0b4c7989a02df051a9bb110889b1a8936</analysis-reference>
+    <analysis-reference number="30">d4f1ddd0b4c7989a02df051a9bb110889b1a8936</analysis-reference>
+    <analysis-reference number="29">d4f1ddd0b4c7989a02df051a9bb110889b1a8936</analysis-reference>
+    <analysis-reference number="28">d4f1ddd0b4c7989a02df051a9bb110889b1a8936</analysis-reference>
+    <analysis-reference number="27">d4f1ddd0b4c7989a02df051a9bb110889b1a8936</analysis-reference>
+    <analysis-reference number="26">f0a68ff2d261707437684947423b17d337b5b6c9</analysis-reference>
+    <analysis-reference number="25">f0a68ff2d261707437684947423b17d337b5b6c9</analysis-reference>
+    <analysis-reference number="24">f0a68ff2d261707437684947423b17d337b5b6c9</analysis-reference>
+    <analysis-reference number="23">f0a68ff2d261707437684947423b17d337b5b6c9</analysis-reference>
+    <analysis-reference number="22">b07cb42f4742cd1eff9972ab6734faad57aa5b47</analysis-reference>
+    <analysis-reference number="21">b07cb42f4742cd1eff9972ab6734faad57aa5b47</analysis-reference>
+    <analysis-reference number="20">b07cb42f4742cd1eff9972ab6734faad57aa5b47</analysis-reference>
+    <analysis-reference number="19">b07cb42f4742cd1eff9972ab6734faad57aa5b47</analysis-reference>
+    <analysis-reference number="18">b07cb42f4742cd1eff9972ab6734faad57aa5b47</analysis-reference>
+    <analysis-reference number="17">85543c4dc2a6fb192898fe269d709391840a2317</analysis-reference>
+    <analysis-reference number="16">85543c4dc2a6fb192898fe269d709391840a2317</analysis-reference>
+    <analysis-reference number="15">658a4b18d08fcdfda4a518820097ea29ce4d7261</analysis-reference>
+    <analysis-reference number="14">67c8659958d9eb6cfeda976b3f28d42c0447bf15</analysis-reference>
+    <analysis-reference number="13">eaccdd51ad747aa71b9d2bd57bd79f22074a3b3c</analysis-reference>
+    <analysis-reference number="12">b1bfa0c056e3f79a69acefd647cadccb388c7ccc</analysis-reference>
+    <analysis-reference number="11">189b4a60fd35a15d208d3d985f1f4df928572af0</analysis-reference>
+    <analysis-reference number="10">2192f51cdb9ebf23ac341521d3c0c7b97bf4c969</analysis-reference>
+    <analysis-reference number="9">b0ffd4ed49ab217cd3558bfb9f8858712db31780</analysis-reference>
+    <analysis-reference number="8">1a8b4443b6cc293ae2dbda0acff5c70d4535143c</analysis-reference>
+    <analysis-reference number="7">1a8b4443b6cc293ae2dbda0acff5c70d4535143c</analysis-reference>
+    <analysis-reference number="6">571b2322094e43920a67512f52acef4e6ef67263</analysis-reference>
+    <analysis-reference number="5">aafc3c95224eb90a13609d4312faa21920448f70</analysis-reference>
+    <analysis-reference number="4">6bb3bad0a19e798e4949675fa7aaa1deebe56c1f</analysis-reference>
+    <analysis-reference number="3">113c9d9e1426e6708266ccd96236fe890ebe6075</analysis-reference>
+    <analysis-reference number="2">113c9d9e1426e6708266ccd96236fe890ebe6075</analysis-reference>
+    <analysis-reference number="1">296811e4740606b3893f2a204a39b9228d62c03c</analysis-reference>
+  </previous-analyses-references>
+  <nb-violations-new>0</nb-violations-new>
+  <nb-violations-existing>0</nb-violations-existing>
+  <nb-violations-fixed>0</nb-violations-fixed>
+  <nb-violations-ignored>0</nb-violations-ignored>
+</analysis>

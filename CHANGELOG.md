@@ -2,6 +2,11 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
+## 3.2.0 - 2022-04-05
+### CHANGE
+- update package to laravel 9.
+- update composer deps.
+- 
 ## 3.1.1 - 2019-04-24
 ### FIX
 - forget to fire Event for upload successfull.

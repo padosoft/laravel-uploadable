@@ -132,7 +132,7 @@ trait Uploadable
      */
     public function guardAgainstInvalidUploadOptions()
     {
-        if (!count($this->uploadOptions->uploads)) {
+        if (!is_array($this->uploadOptions->uploads) || !count($this->uploadOptions->uploads)) {
             throw InvalidOption::missingUploadFields();
         }
         if ($this->uploadOptions->uploadBasePath === null || $this->uploadOptions->uploadBasePath == '') {
