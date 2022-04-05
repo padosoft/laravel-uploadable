@@ -232,17 +232,17 @@ class UploadOptions
     public function getUploadOptionsDefault(): UploadOptions
     {
         return UploadOptions::create()
-            ->setCreateDirModeMask('0755')
-            ->appendModelIdSuffixInFileName()
-            ->setFileNameSuffixSeparator('_')
-            ->setUploadsAttributes(['image', 'image_mobile'])
-            ->setMimeType([
-                'image/gif',
-                'image/jpeg',
-                'image/png',
-            ])
-            ->setUploadBasePath( 'upload/')
-            ->setUploadPaths([])
-            ->setStorageDisk('public');
+                            ->setCreateDirModeMask('0755')
+                            ->appendModelIdSuffixInFileName()
+                            ->setFileNameSuffixSeparator('_')
+                            ->setUploadsAttributes(['image', 'image_mobile'])
+                            ->setMimeType([
+                                              'image/gif',
+                                              'image/jpeg',
+                                              'image/png',
+                                          ])
+                            ->setUploadBasePath( 'upload/')
+                            ->setUploadPaths([])
+                            ->setStorageDisk('public');
     }
 }

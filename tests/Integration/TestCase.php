@@ -8,7 +8,6 @@ use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Padosoft\Test\traits\ExceptionTestable;
 use Padosoft\Test\traits\FileSystemTestable;
-use Padosoft\Laravel\Request\UploadedFileTestable;
 
 
 abstract class TestCase extends Orchestra
@@ -20,7 +19,7 @@ abstract class TestCase extends Orchestra
      */
     protected $testModel;
 
-    public function setUp(): void
+    public function setUp() : void
     {
         parent::setUp();
 
@@ -30,7 +29,7 @@ abstract class TestCase extends Orchestra
         $this->initFileAndPath(__DIR__);
     }
 
-    protected function tearDown(): void
+    protected function tearDown() : void
     {
         //remove created path during test
         $this->removeCreatedPathDuringTest(__DIR__);
@@ -57,7 +56,7 @@ abstract class TestCase extends Orchestra
      */
     protected function setUpDatabase(Application $app)
     {
-     //   file_put_contents($this->getTempDirectory().'/database.sqlite', null);
+        //   file_put_contents($this->getTempDirectory().'/database.sqlite', null);
 
         $app['db']->connection()->getSchemaBuilder()->create('test_models', function (Blueprint $table) {
             $table->increments('id');
