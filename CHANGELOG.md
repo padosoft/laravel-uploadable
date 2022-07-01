@@ -2,6 +2,11 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
+# 5.0.0 - 2022-07-01
+### CHANGE BREAK
+- remove storage property from UploadOptions class and add getStorage() method to UploadOptions class
+to resolve serialize model problem, because object Laravel Disk is not serializzable.
+
 # 4.2.0 - 2022-04-05
 ### CHANGE
 - update package to laravel 9.

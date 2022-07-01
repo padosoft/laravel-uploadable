@@ -13,7 +13,7 @@ class UploadOptionsTest extends Orchestra
         $obj = UploadOptions::create()->getUploadOptionsDefault();
         $this->assertEquals(true, $obj->appendModelIdSuffixInUploadedFileName);
         $this->assertEquals('upload', $obj->uploadBasePath);
-        $this->assertEquals(canonicalize(storage_path('app/public/upload/')), canonicalize($obj->storage->path($obj->uploadBasePath)));
+        $this->assertEquals(canonicalize(storage_path('app/public/upload/')), canonicalize($obj->getStorage()->path($obj->uploadBasePath)));
         $this->assertEquals('0755', $obj->uploadCreateDirModeMask);
         $this->assertEquals('_', $obj->uploadFileNameSuffixSeparator);
         $this->assertEquals([], $obj->uploadPaths);

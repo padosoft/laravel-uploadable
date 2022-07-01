@@ -78,13 +78,6 @@ class UploadOptions
     public $uploadPaths = [];
 
     /**
-     * The laravel storage disk to store uploaded files
-     * @var \Illuminate\Filesystem\FilesystemAdapter
-     */
-    public $storage;
-
-
-    /**
      * @return UploadOptions
      */
     public static function create(): UploadOptions
@@ -211,7 +204,6 @@ class UploadOptions
      */
     public function setStorageDisk(string $diskName)
     {
-        $this->storage = Storage::disk($diskName);
         $this->storageDiskName=$diskName;
 
         return $this;
@@ -223,7 +215,7 @@ class UploadOptions
      */
     public function getStorage() : \Illuminate\Filesystem\FilesystemAdapter
     {
-        return $this->storage;
+        return Storage::disk($this->storageDiskName);
     }
 
     /**

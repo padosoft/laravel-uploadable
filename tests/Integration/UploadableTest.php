@@ -262,7 +262,7 @@ class UploadableTest extends TestCase
         $this->assertEquals(canonicalize($path), $model->getUploadFileBasePath('image'));
         @unlink(canonicalize($path));
         $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'dummy/'];
-        $this->assertEquals(canonicalize(storage_path('app/public/dummy/')), canonicalize($model->getUploadOptionsOrDefault()->storage->path($model->getUploadFileBasePath('image'))));
+        $this->assertEquals(canonicalize(storage_path('app/public/dummy/')), canonicalize($model->getUploadOptionsOrDefault()->getStorage()->path($model->getUploadFileBasePath('image'))));
         @unlink(canonicalize(public_path('dummy/')));
     }
 
@@ -275,9 +275,9 @@ class UploadableTest extends TestCase
         $this->assertEquals('', $model->getUploadFileBasePathSpecific('image'));
         $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'dummy/'];
         $this->assertEquals(canonicalize(storage_path('app/public/dummy/')),
-            canonicalize($model->getUploadOptionsOrDefault()->storage->path($model->getUploadFileBasePath('image'))));
+            canonicalize($model->getUploadOptionsOrDefault()->getStorage()->path($model->getUploadFileBasePath('image'))));
         $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'custom_upload/'];
-        $this->assertEquals(canonicalize(storage_path('app/public/custom_upload/')), canonicalize($model->getUploadOptionsOrDefault()->storage->path($model->getUploadFileBasePath('image'))));
+        $this->assertEquals(canonicalize(storage_path('app/public/custom_upload/')), canonicalize($model->getUploadOptionsOrDefault()->getStorage()->path($model->getUploadFileBasePath('image'))));
     }
 
     /**
@@ -309,9 +309,9 @@ class UploadableTest extends TestCase
         $model = new TestModel();
         $model->image = 'dummy.txt';
         $model->getUploadOptionsOrDefault()->uploadBasePath = 'dummy/';
-        $this->assertEquals($model->getUploadOptionsOrDefault()->storage->url('dummy/' . $model->image), $model->getUploadFileUrl('image'));
+        $this->assertEquals($model->getUploadOptionsOrDefault()->getStorage()->url('dummy/' . $model->image), $model->getUploadFileUrl('image'));
         $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'dummy2/'];
-        $this->assertEquals($model->getUploadOptionsOrDefault()->storage->url('dummy2/' . $model->image), $model->getUploadFileUrl('image'));
+        $this->assertEquals($model->getUploadOptionsOrDefault()->getStorage()->url('dummy2/' . $model->image), $model->getUploadFileUrl('image'));
     }
 
     /**
@@ -333,10 +333,10 @@ class UploadableTest extends TestCase
     {
         $model = new TestModel();
         $this->assertEquals('', $model->removePublicPath(''));
-        $this->assertEquals('', $model->removePublicPath($model->getUploadOptionsOrDefault()->storage->path('')));
-        $this->assertEquals('', $model->removePublicPath($model->getUploadOptionsOrDefault()->storage->path('/')));
+        $this->assertEquals('', $model->removePublicPath($model->getUploadOptionsOrDefault()->getStorage()->path('')));
+        $this->assertEquals('', $model->removePublicPath($model->getUploadOptionsOrDefault()->getStorage()->path('/')));
         $this->assertEquals(canonicalize(DIRECTORY_SEPARATOR . 'upload/image'),
-            $model->removePublicPath($model->getUploadOptionsOrDefault()->storage->path('upload/image')));
+            $model->removePublicPath($model->getUploadOptionsOrDefault()->getStorage()->path('upload/image')));
     }*/
 
     /**
@@ -348,13 +348,13 @@ class UploadableTest extends TestCase
         $model->image = 'dummy.txt';
         $model->getUploadOptionsOrDefault()->uploadBasePath = 'dummy/';
 
-        $this->assertEquals($model->getUploadOptionsOrDefault()->storage->url('dummy/'), $model->getUploadFileBaseUrl('image'));
+        $this->assertEquals($model->getUploadOptionsOrDefault()->getStorage()->url('dummy/'), $model->getUploadFileBaseUrl('image'));
         $model->getUploadOptionsOrDefault()->uploadPaths = ['image' => 'dummy2/'];
-        $this->assertEquals($model->getUploadOptionsOrDefault()->storage->url('dummy2/'), $model->getUploadFileBaseUrl('image'));
+        $this->assertEquals($model->getUploadOptionsOrDefault()->getStorage()->url('dummy2/'), $model->getUploadFileBaseUrl('image'));
         $model->image = '/';
-        $this->assertEquals($model->getUploadOptionsOrDefault()->storage->url('dummy2/'), $model->getUploadFileBaseUrl('image'));
+        $this->assertEquals($model->getUploadOptionsOrDefault()->getStorage()->url('dummy2/'), $model->getUploadFileBaseUrl('image'));
         $model->image = '';
-        $this->assertEquals($model->getUploadOptionsOrDefault()->storage->url('dummy2/'), $model->getUploadFileBaseUrl('image'));
+        $this->assertEquals($model->getUploadOptionsOrDefault()->getStorage()->url('dummy2/'), $model->getUploadFileBaseUrl('image'));
     }
 
     /**

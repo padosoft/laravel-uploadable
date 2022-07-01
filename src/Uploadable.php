@@ -206,14 +206,14 @@ trait Uploadable
 
         //delete if file already exists
         $newFile = njoin($pathToStore, $newName);
-        if($this->getUploadOptionsOrDefault()->storage->exists($newFile)){
-            $this->getUploadOptionsOrDefault()->storage->delete($newFile);
+        if($this->getUploadOptionsOrDefault()->getStorage()->exists($newFile)){
+            $this->getUploadOptionsOrDefault()->getStorage()->delete($newFile);
         }
 
         //move file to destination folder
         try {
             //$targetFile = $uploadedFile->move($pathToStore, $newName);
-            $targetFile = $this->getUploadOptionsOrDefault()->storage->putFileAs(
+            $targetFile = $this->getUploadOptionsOrDefault()->getStorage()->putFileAs(
                                                         $pathToStore, $uploadedFile, $newName
                                                     );
 
@@ -316,7 +316,7 @@ trait Uploadable
 
         //unlink file
         $path = njoin($uploadFieldPath, $this->{$uploadField});
-        if(!$this->getUploadOptionsOrDefault()->storage->delete($path)){
+        if(!$this->getUploadOptionsOrDefault()->getStorage()->delete($path)){
             Log::error('Error when Uploadable.deleteUploadedFile() try to delete file:'.$path);
         }
 
@@ -489,7 +489,7 @@ trait Uploadable
     ) : string
     {
         $uploadFieldPath = $this->getUploadFileBasePath($uploadField);
-        $uploadFieldPath = canonicalize($this->getUploadOptionsOrDefault()->storage->path(addFinalSlash($uploadFieldPath) . $this->{$uploadField}));
+        $uploadFieldPath = canonicalize($this->getUploadOptionsOrDefault()->getStorage()->path(addFinalSlash($uploadFieldPath) . $this->{$uploadField}));
 
         if ($this->isSlashOrEmptyDir($uploadFieldPath)) {
             return '';
@@ -512,7 +512,7 @@ trait Uploadable
     {
         $url = addFinalSlash($this->getUploadFileBasePath($uploadField)).  $this->{$uploadField};
 
-        return $url == '' ? '' : $this->getUploadOptionsOrDefault()->storage->url($url);
+        return $url == '' ? '' : $this->getUploadOptionsOrDefault()->getStorage()->url($url);
     }
 
     /**
@@ -560,7 +560,7 @@ trait Uploadable
             return '';
         }
 
-        return addFinalSlash($this->getUploadOptionsOrDefault()->storage->url($uploadFieldPath));
+        return addFinalSlash($this->getUploadOptionsOrDefault()->getStorage()->url($uploadFieldPath));
     }
 
     /**
@@ -660,6 +660,6 @@ trait Uploadable
 
         $oldValue = $this->getOriginal($uploadField);
 
-        $this->getUploadOptionsOrDefault()->storage->delete(njoin($this->getUploadFileBasePath($uploadField), $oldValue));
+        $this->getUploadOptionsOrDefault()->getStorage()->delete(njoin($this->getUploadFileBasePath($uploadField), $oldValue));
     }
 }
