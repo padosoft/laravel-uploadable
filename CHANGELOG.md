@@ -2,6 +2,11 @@
 
 All Notable changes to `laravel-uploadable` will be documented in this file
 
+# 5.1.0 - 2023-03-21
+### CHANGE
+- update package to laravel 10.x.
+- update composer deps.
+
 # 5.0.0 - 2022-07-01
 ### CHANGE BREAK
 - remove storage property from UploadOptions class and add getStorage() method to UploadOptions class
