@@ -22,6 +22,16 @@ class UploadOptions
     public $appendModelIdSuffixInUploadedFileName = true;
 
     /**
+     * If set to true, a $model->uploadFileNameSuffixSeparator.[field_name] suffx are added to upload file name.
+     * Ex.:
+     * original uploaded file name: pippo.jpg
+     * field name: image_thumb
+     * final name: 'pippo'.$model->uploadFileNameSuffixSeparator.$model->uploadFileNameSuffixSeparator.'.jpg'
+     * @var bool
+     */
+    public $appendFieldSuffixInUploadedFileName = false;
+
+    /**
      * Suffix separator to generate new file name
      * @var string
      */
@@ -115,6 +125,22 @@ class UploadOptions
     public function dontAppendModelIdSuffixInFileName(): UploadOptions
     {
         $this->appendModelIdSuffixInUploadedFileName = false;
+
+        return $this;
+    }
+
+    public function appendFieldSuffixSuffixInFileName(): UploadOptions
+    {
+        $this->appendFieldSuffixInUploadedFileName = true;
+
+        return $this;
+    }
+
+    /**
+     */
+    public function dontAppendFieldSuffixSuffixInFileName(): UploadOptions
+    {
+        $this->appendFieldSuffixInUploadedFileName = false;
 
         return $this;
     }

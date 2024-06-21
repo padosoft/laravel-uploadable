@@ -251,14 +251,18 @@ trait Uploadable
      * @return string
      * @internal param string $uploadField
      */
-    public function generateNewUploadFileName(UploadedFile $uploadedFile) : string
+    public function generateNewUploadFileName(UploadedFile $uploadedFile,string $fileFieldName='') : string
     {
         if (!$this->id && $this->getUploadOptionsOrDefault()->appendModelIdSuffixInUploadedFileName) {
             return '';
         }
 
+        if ($fileFieldName=='' && $this->getUploadOptionsOrDefault()->appendFieldSuffixInUploadedFileName) {
+            return '';
+        }
+
         //check if file need a new name
-        $newName = $this->calcolateNewUploadFileName($uploadedFile);
+        $newName = $this->calcolateNewUploadFileName($uploadedFile,$fileFieldName);
         if ($newName != '') {
             return $newName;
         }
@@ -272,17 +276,19 @@ trait Uploadable
      * @param UploadedFile $uploadedFile
      * @return string
      */
-    public function calcolateNewUploadFileName(UploadedFile $uploadedFile) : string
+    public function calcolateNewUploadFileName(UploadedFile $uploadedFile,string $fileFieldName='') : string
     {
-        if (!$this->getUploadOptionsOrDefault()->appendModelIdSuffixInUploadedFileName) {
+        if (!$this->getUploadOptionsOrDefault()->appendModelIdSuffixInUploadedFileName && !$this->getUploadOptionsOrDefault()->appendFieldSuffixInUploadedFileName) {
             return '';
         }
 
         //retrive original file name and extension
         $filenameWithoutExtension = getUploadedFilenameWithoutExtension($uploadedFile);
         $ext = $uploadedFile->getClientOriginalExtension();
+        $suffix=$this->getUploadOptionsOrDefault()->appendModelIdSuffixInUploadedFileName?$this->getUploadOptionsOrDefault()->uploadFileNameSuffixSeparator . $this->id:'';
+        $suffix.=$this->getUploadOptionsOrDefault()->appendFieldSuffixInUploadedFileName?$this->getUploadOptionsOrDefault()->uploadFileNameSuffixSeparator . $fileFieldName:'';
 
-        $newName = $filenameWithoutExtension . $this->getUploadOptionsOrDefault()->uploadFileNameSuffixSeparator . $this->id . '.' . $ext;
+        $newName = $filenameWithoutExtension . $suffix . '.' . $ext;
         return sanitize_filename($newName);
     }
 
@@ -591,7 +597,7 @@ trait Uploadable
         if ($uploadedFile === null) {
             return;
         }
-        $newName = $this->generateNewUploadFileName($uploadedFile);
+        $newName = $this->generateNewUploadFileName($uploadedFile,$uploadField);
         if ($newName == '') {
             return;
         }

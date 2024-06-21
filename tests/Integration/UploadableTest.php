@@ -394,6 +394,24 @@ class UploadableTest extends TestCase
         $model->save();
         $model->first();
         $this->assertEquals('dummy-' . $model->id . '.txt', $model->generateNewUploadFileName($uploadedFile));
+
+        $model = new class extends TestModel
+        {
+            public function getUploadOptions(): UploadOptions
+            {
+                return UploadOptions::create()->getUploadOptionsDefault()
+                    ->appendModelIdSuffixInFileName()
+                    ->appendFieldSuffixSuffixInFileName()
+                    ->setFileNameSuffixSeparator('-');
+            }
+        };
+        $options = $model->getUploadOptionsOrDefault();
+        $this->assertEquals('', $model->generateNewUploadFileName($uploadedFile));
+        $model->name = 'dummy.txt';
+        $model->image = 'dummy.txt';
+        $model->save();
+        $model->first();
+        $this->assertEquals('dummy-' . $model->id .'-image'. '.txt', $model->generateNewUploadFileName($uploadedFile,'image'));
     }
 
     /**
@@ -427,6 +445,20 @@ class UploadableTest extends TestCase
         $options = $model->getUploadOptionsOrDefault();
         $model->first();
         $this->assertEquals('dummy-' . $model->id . '.txt', $model->calcolateNewUploadFileName($uploadedFile));
+
+        $model = new class extends TestModel
+        {
+            public function getUploadOptions(): UploadOptions
+            {
+                return UploadOptions::create()->getUploadOptionsDefault()
+                    ->appendModelIdSuffixInFileName()
+                    ->appendFieldSuffixSuffixInFileName()
+                    ->setFileNameSuffixSeparator('-');
+            }
+        };
+        $options = $model->getUploadOptionsOrDefault();
+        $model->first();
+        $this->assertEquals('dummy-' . $model->id . '-image'.'.txt', $model->calcolateNewUploadFileName($uploadedFile,'image'));
     }
 
     /**
@@ -447,10 +479,10 @@ class UploadableTest extends TestCase
         $model->save();
         $model->image = '';
         $model->image_mobile = '';
-        $options = $model->getUploadOptionsOrDefault();
+        $options = $model->getUploadOptionsOrDefault()->appendFieldSuffixSuffixInFileName();
         $model->generateAllNewUploadFileNameAndSetAttribute();
-        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image);
-        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image_mobile);
+        $this->assertEquals('dummy_' . $model->id . '_image.txt', $model->image);
+        $this->assertEquals('dummy_' . $model->id . '_image_mobile.txt', $model->image_mobile);
 
         $uploadedFileKO = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt', '', 1);
         $uploadedFile = $this->getUploadedFileForTest(__DIR__ . '/resources/dummy.txt', '', 1);
@@ -461,8 +493,8 @@ class UploadableTest extends TestCase
         $model->image = '';
         $model->image_mobile = '';
         $model->generateAllNewUploadFileNameAndSetAttribute();
-        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image);
-        $this->assertEquals('dummy_' . $model->id . '.txt', $model->image_mobile);
+        $this->assertEquals('dummy_' . $model->id . '_image.txt', $model->image);
+        $this->assertEquals('dummy_' . $model->id . '_image_mobile.txt', $model->image_mobile);
     }
 
     /**
