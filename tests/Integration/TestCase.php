@@ -29,10 +29,28 @@ abstract class TestCase extends Orchestra
         $this->initFileAndPath(__DIR__);
     }
 
+    protected function restoreExceptionHandler(): void
+    {
+        while (true) {
+            $previousHandler = set_exception_handler(static fn() => null);
+
+            restore_exception_handler();
+
+            if ($previousHandler === null) {
+                break;
+            }
+
+            restore_exception_handler();
+        }
+    }
+
     protected function tearDown() : void
     {
+        parent::tearDown();
+        $this->restoreExceptionHandler();
         //remove created path during test
         $this->removeCreatedPathDuringTest(__DIR__);
+
     }
 
     /**

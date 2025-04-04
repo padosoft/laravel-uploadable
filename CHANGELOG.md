@@ -1,6 +1,19 @@
 # Changelog
 
 All Notable changes to `laravel-uploadable` will be documented in this file
+# 5.4.0 - 2025-04-04
+### CHANGE
+- update package to laravel 12.x.
+- update composer deps.
+
+# 5.3.0 - 2024-06-21
+### CHANGE
+- Gestito suffix con nome del campo
+
+# 5.2.0 - 2024-05-21
+### CHANGE
+- update package to laravel 11.x.
+- update composer deps.
 
 # 5.1.0 - 2023-03-21
 ### CHANGE
